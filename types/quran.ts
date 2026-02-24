@@ -22,6 +22,8 @@ export interface Ayah {
   ruku: number;
   hizbQuarter: number;
   sajda: boolean | { id: number; recommended: boolean; obligatory: boolean };
+  audio?: string;
+  translation?: string;
 }
 
 export interface QuestionOption {
@@ -37,6 +39,8 @@ export interface Question {
     text: string;
     surah: number;
     ayah: number;
+    audio?: string;
+    translation?: string;
   };
   options: QuestionOption[];
 }

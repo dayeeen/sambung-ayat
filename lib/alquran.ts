@@ -55,6 +55,66 @@ export async function fetchNextAyah(currentGlobalNumber: number): Promise<Ayah> 
 }
 
 /**
+ * Fetches all ayahs for a specific Juz (1-30)
+ */
+export async function fetchJuz(juzNumber: number): Promise<Ayah[]> {
+  if (juzNumber < 1 || juzNumber > 30) {
+    throw new Error('Juz number must be between 1 and 30');
+  }
+
+  // Use the Juz endpoint which returns all verses for that Juz
+  const url = `${BASE_URL}/juz/${juzNumber}/${EDITION}`;
+  
+  try {
+    const data = await fetchWithRetry(url);
+    const response: AlQuranResponse<{ ayahs: Ayah[] }> = await data.json();
+
+    if (response.code !== 200 || !response.data) {
+      throw new Error(`Failed to fetch Juz ${juzNumber}: ${response.status}`);
+    }
+
+    // Cache the ayahs individually too for future lookups
+    response.data.ayahs.forEach(ayah => {
+        ayahCache.set(ayah.number, ayah);
+    });
+
+    return response.data.ayahs;
+  } catch (error) {
+    console.error(`Error fetching Juz ${juzNumber}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches audio and translation for a specific ayah
+ */
+export async function fetchAyahDetails(number: number): Promise<{ audio: string; translation: string }> {
+  // Use editions endpoint to get both in one call
+  const url = `${BASE_URL}/ayah/${number}/editions/ar.alafasy,id.indonesian`;
+  
+  try {
+    const data = await fetchWithRetry(url);
+    const response = await data.json();
+
+    if (response.code !== 200 || !response.data) {
+      throw new Error(`Failed to fetch ayah details ${number}: ${response.status}`);
+    }
+
+    // Response data is an array of objects corresponding to the requested editions
+    const audioData = response.data.find((item: any) => item.edition.identifier === 'ar.alafasy');
+    const translationData = response.data.find((item: any) => item.edition.identifier === 'id.indonesian');
+
+    return {
+      audio: audioData?.audio || '',
+      translation: translationData?.text || ''
+    };
+  } catch (error) {
+    console.error(`Error fetching details for ayah ${number}:`, error);
+    return { audio: '', translation: '' }; // Fallback
+  }
+}
+
+/**
  * Helper to fetch with timeout and 1 retry
  */
 async function fetchWithRetry(url: string, retries = 1, timeoutMs = 5000): Promise<Response> {

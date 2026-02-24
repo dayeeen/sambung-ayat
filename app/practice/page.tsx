@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { 
   DndContext, 
   useDraggable, 
@@ -60,6 +61,18 @@ function DraggableOption({ option, isSelected, isDisabled }: { option: QuestionO
   );
 }
 
+export default function PracticePage() {
+  return (
+    <Suspense fallback={
+       <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground animate-pulse">
+        <div className="text-lg tracking-widest uppercase">Loading...</div>
+      </div>
+    }>
+      <PracticeContent />
+    </Suspense>
+  );
+}
+
 // Drop Zone Component
 function DropZone({ selectedOption, isCorrect, isSubmitted, onReset }: { selectedOption: QuestionOption | null; isCorrect: boolean | null; isSubmitted: boolean; onReset: () => void }) {
   const { setNodeRef, isOver } = useDroppable({
@@ -111,7 +124,10 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset }: { selecte
   );
 }
 
-export default function PracticePage() {
+function PracticeContent() {
+  const searchParams = useSearchParams();
+  const juzParam = searchParams.get('juz');
+
   const [question, setQuestion] = useState<Question | null>(null);
   const [selectedOption, setSelectedOption] = useState<QuestionOption | null>(null);
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
@@ -119,6 +135,8 @@ export default function PracticePage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeDragItem, setActiveDragItem] = useState<QuestionOption | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -135,9 +153,15 @@ export default function PracticePage() {
   );
 
   const fetchQuestion = async () => {
+    setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setIsLoading(true);
     try {
-      const res = await fetch('/api/question');
+      const url = juzParam ? `/api/question?juz=${juzParam}` : '/api/question';
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch question');
       const data: Question = await res.json();
       setQuestion(data);
@@ -157,7 +181,7 @@ export default function PracticePage() {
 
   useEffect(() => {
     fetchQuestion();
-  }, []);
+  }, [juzParam]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -214,6 +238,17 @@ export default function PracticePage() {
     }
   };
 
+  const toggleAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
   const dropAnimation: DropAnimation = {
     sideEffects: defaultDropAnimationSideEffects({
       styles: {
@@ -250,10 +285,36 @@ export default function PracticePage() {
               <div className="w-12 h-0.5 bg-border mx-auto rounded-full" />
             </div>
 
-            <div className="relative py-2">
+            <div className="relative py-2 space-y-4">
               <h1 className="text-2xl md:text-4xl font-arabic leading-[2.0] md:leading-[2.2] text-foreground text-center" dir="rtl">
                 {question?.currentAyah.text}
               </h1>
+
+              {question?.currentAyah.translation && (
+                <p className="text-sm md:text-base text-muted-foreground/80 italic px-4">
+                  "{question.currentAyah.translation}"
+                </p>
+              )}
+
+              {question?.currentAyah.audio && (
+                <div className="flex justify-center mt-2">
+                  <button
+                    onClick={toggleAudio}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors text-sm font-medium"
+                  >
+                    <span>{isPlaying ? 'Stop Recitation' : 'Play Recitation'}</span>
+                    <span className="text-lg">{isPlaying ? '⏹️' : '▶️'}</span>
+                  </button>
+                  <audio
+                    ref={audioRef}
+                    src={question.currentAyah.audio}
+                    onEnded={() => setIsPlaying(false)}
+                    onPause={() => setIsPlaying(false)}
+                    onPlay={() => setIsPlaying(true)}
+                    className="hidden"
+                  />
+                </div>
+              )}
             </div>
             
             <p className="text-sm text-muted-foreground/60 font-medium">

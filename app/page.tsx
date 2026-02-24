@@ -1,13 +1,18 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 
 export default function Home() {
+  const [showJuzSelection, setShowJuzSelection] = useState(false);
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500">
       <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-20 text-center">
-        <div className="max-w-3xl space-y-12 animate-fade-in">
+        <div className="max-w-4xl w-full space-y-12 animate-fade-in flex flex-col items-center">
           
           {/* Hero Section */}
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-3xl">
             <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-sm font-medium tracking-wide mb-4">
               ✨ Beta Release
             </div>
@@ -24,49 +29,82 @@ export default function Home() {
           </div>
 
           {/* CTA Section */}
-          <div className="flex flex-col sm:flex-row gap-6 items-center justify-center pt-8">
-            <Link
-              href="/practice"
-              className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
-            >
-              Start Practice
-              <span className="opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300">→</span>
-            </Link>
-            
-            <a
-              href="https://github.com/dayeeen/sambung-ayat"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-4 bg-transparent border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 rounded-full text-lg font-medium transition-all duration-300 min-w-[200px]"
-            >
-              View Source
-            </a>
+          <div className="w-full flex flex-col items-center justify-center pt-8">
+            {!showJuzSelection ? (
+              <div className="flex flex-col sm:flex-row gap-6 animate-in fade-in zoom-in duration-300">
+                <Link
+                  href="/practice"
+                  className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
+                >
+                  Start Random
+                  <span className="opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300">→</span>
+                </Link>
+                
+                <button
+                  onClick={() => setShowJuzSelection(true)}
+                  className="px-8 py-4 bg-transparent border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 rounded-full text-lg font-medium transition-all duration-300 min-w-[200px]"
+                >
+                  Select Juz
+                </button>
+              </div>
+            ) : (
+              <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+                <div className="flex justify-between items-center px-2">
+                    <h3 className="text-xl font-medium text-foreground">Select a Juz to Practice</h3>
+                    <button 
+                      onClick={() => setShowJuzSelection(false)} 
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                    >
+                        <span>✕</span> Close
+                    </button>
+                </div>
+                
+                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-3">
+                    {Array.from({ length: 30 }, (_, i) => i + 1).map((juz) => (
+                        <Link 
+                            key={juz} 
+                            href={`/practice?juz=${juz}`}
+                            className="aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl bg-surface border border-border hover:border-primary hover:bg-primary/5 hover:scale-105 active:scale-95 transition-all duration-200 group"
+                        >
+                            <span className="text-xs text-muted-foreground uppercase tracking-widest group-hover:text-primary/70">Juz</span>
+                            <span className="text-2xl font-bold text-foreground group-hover:text-primary">{juz}</span>
+                        </Link>
+                    ))}
+                </div>
+                
+                <p className="text-sm text-muted-foreground pt-4">
+                  Select a specific Juz to focus your practice on that section.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Features Grid (Subtle) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-16 max-w-4xl mx-auto text-sm text-muted-foreground">
-            <div className="space-y-2">
-              <div className="w-10 h-10 bg-primary-bg rounded-full flex items-center justify-center mx-auto text-primary mb-3">
-                📖
+          {!showJuzSelection && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-16 max-w-4xl mx-auto text-sm text-muted-foreground animate-in fade-in delay-200">
+              <div className="space-y-2">
+                <div className="w-10 h-10 bg-primary-bg rounded-full flex items-center justify-center mx-auto text-primary mb-3">
+                  📖
+                </div>
+                <h3 className="font-semibold text-foreground">Verse by Verse</h3>
+                <p>Practice continuously with instant feedback on your recitation recall.</p>
               </div>
-              <h3 className="font-semibold text-foreground">Verse by Verse</h3>
-              <p>Practice continuously with instant feedback on your recitation recall.</p>
-            </div>
-            <div className="space-y-2">
-              <div className="w-10 h-10 bg-primary-bg rounded-full flex items-center justify-center mx-auto text-primary mb-3">
-                🧠
+              <div className="space-y-2">
+                <div className="w-10 h-10 bg-primary-bg rounded-full flex items-center justify-center mx-auto text-primary mb-3">
+                  🧠
+                </div>
+                <h3 className="font-semibold text-foreground">Active Recall</h3>
+                <p>Strengthen your memory by actively retrieving the next ayah.</p>
               </div>
-              <h3 className="font-semibold text-foreground">Active Recall</h3>
-              <p>Strengthen your memory by actively retrieving the next ayah.</p>
-            </div>
-            <div className="space-y-2">
-              <div className="w-10 h-10 bg-primary-bg rounded-full flex items-center justify-center mx-auto text-primary mb-3">
-                🌿
+              <div className="space-y-2">
+                <div className="w-10 h-10 bg-primary-bg rounded-full flex items-center justify-center mx-auto text-primary mb-3">
+                  🌿
+                </div>
+                <h3 className="font-semibold text-foreground">Distraction Free</h3>
+                <p>No ads, no points, no leaderboards. Just you and the Qur'an.</p>
               </div>
-              <h3 className="font-semibold text-foreground">Distraction Free</h3>
-              <p>No ads, no points, no leaderboards. Just you and the Qur'an.</p>
             </div>
-          </div>
+          )}
 
         </div>
       </main>
