@@ -7,7 +7,7 @@ import { prisma } from '../../../lib/prisma';
 export async function POST(request: NextRequest) {
   try {
     const body: ValidationRequest = await request.json();
-    const { selectedAyahId, currentAyahId } = body;
+    const { selectedAyahId, currentAyahId, sessionLimit } = body;
 
     if (!selectedAyahId || !currentAyahId) {
        return NextResponse.json(
@@ -29,20 +29,37 @@ export async function POST(request: NextRequest) {
     try {
       const user = await getCurrentUser();
       if (user) {
-        // Find or Create Active Session
+        // Find Active Session
         let session = await prisma.session.findFirst({
           where: {
             userId: user.id,
             endedAt: null,
-            totalQuestions: { lt: 10 }
           }
         });
 
+        const targetLimit = sessionLimit || 10;
+
+        // If session exists but limit doesn't match or it's already full, close it
+        // @ts-ignore
+        if (session && (session.totalQuestions >= (session.maxQuestions || 10) || (session.maxQuestions || 10) !== targetLimit)) {
+          await prisma.session.update({
+             where: { id: session.id },
+             data: { endedAt: new Date() }
+          });
+          session = null;
+        }
+
         if (!session) {
           session = await prisma.session.create({
-            data: { userId: user.id }
+            data: { 
+              userId: user.id,
+              maxQuestions: targetLimit
+            }
           });
         }
+        
+        // @ts-ignore
+        const maxQuestions = session.maxQuestions || 10;
 
         // Streak Logic
         const now = new Date();
@@ -92,7 +109,7 @@ export async function POST(request: NextRequest) {
         // @ts-ignore
         const newMaxCombo = Math.max(session.maxCombo || 0, newComboStreak);
         const newTotalQuestions = session.totalQuestions + 1;
-        const isSessionFinished = newTotalQuestions >= 10;
+        const isSessionFinished = newTotalQuestions >= maxQuestions;
 
         // Update Session
         const updatedSession = await prisma.session.update({
@@ -111,7 +128,7 @@ export async function POST(request: NextRequest) {
           comboStreak: newComboStreak,
           pointsGained: gainedPoint,
           totalPoints: updatedSession.totalPoints,
-          remainingQuestions: 10 - newTotalQuestions,
+          remainingQuestions: maxQuestions - newTotalQuestions,
           sessionFinished: isSessionFinished
         };
 

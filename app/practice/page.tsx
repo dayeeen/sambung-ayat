@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useRef } from 'react';
+import { useState, useEffect, Suspense, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   DndContext, 
@@ -17,9 +17,68 @@ import {
   DragStartEvent
 } from '@dnd-kit/core';
 import { Question, QuestionOption, ValidationResponse } from '../../types/quran';
+import confetti from 'canvas-confetti';
+
+const uiText = {
+  id: {
+    loading: 'Memuat Soal...',
+    question: 'Pertanyaan',
+    pts: 'POIN',
+    tapToRemove: 'Ketuk untuk menghapus',
+    dragHere: 'Tarik ayat yang benar ke sini',
+    play: 'Putar Tilawah',
+    stop: 'Hentikan Tilawah',
+    confirm: 'Konfirmasi Jawaban',
+    correct: 'MasyaAllah, benar!',
+    incorrect: 'Lanjutan yang benar adalah:',
+    next: 'Ayat Berikutnya →',
+    sessionFinished: 'Sesi Selesai!',
+    completed: 'Alhamdulillah, antum telah menyelesaikan',
+    questions: 'soal',
+    totalPoints: 'Total Poin',
+    lastStreak: 'Streak Terakhir',
+    maxCombo: 'Max Combo',
+    newSession: 'Mulai Sesi Baru',
+    leaderboard: 'Lihat Peringkat',
+    home: 'Kembali ke Beranda',
+    surah: 'Surah',
+    ayah: 'Ayat',
+    selected: 'Terpilih',
+    pointsLabel: 'Poin',
+    comboLabel: 'Combo'
+  },
+  en: {
+    loading: 'Loading Question...',
+    question: 'Question',
+    pts: 'PTS',
+    tapToRemove: 'Tap to remove',
+    dragHere: 'Drag the correct ayah here',
+    play: 'Play Recitation',
+    stop: 'Stop Recitation',
+    confirm: 'Confirm Selection',
+    correct: 'MashaAllah, Correct!',
+    incorrect: 'The correct continuation is:',
+    next: 'Next Verse →',
+    sessionFinished: 'Session Finished!',
+    completed: 'Alhamdulillah, you have completed',
+    questions: 'questions',
+    totalPoints: 'Total Points',
+    lastStreak: 'Last Streak',
+    maxCombo: 'Max Combo',
+    newSession: 'Start New Session',
+    leaderboard: 'View Leaderboard',
+    home: 'Back to Home',
+    surah: 'Surah',
+    ayah: 'Ayah',
+    selected: 'Selected',
+    pointsLabel: 'Points',
+    comboLabel: 'Combo'
+  }
+};
 
 // Draggable Option Component
-function DraggableOption({ option, isSelected, isDisabled }: { option: QuestionOption; isSelected: boolean; isDisabled: boolean }) {
+function DraggableOption({ option, isSelected, isDisabled, language }: { option: QuestionOption; isSelected: boolean; isDisabled: boolean; language: 'id' | 'en' }) {
+  const t = uiText[language];
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `option-${option.id}`,
     data: { option },
@@ -33,7 +92,7 @@ function DraggableOption({ option, isSelected, isDisabled }: { option: QuestionO
   if (isSelected) {
     return (
       <div className="w-full p-4 rounded-xl border-2 border-dashed border-border bg-muted/20 opacity-50 flex items-center justify-center min-h-[80px]">
-        <span className="text-muted-foreground text-sm">Selected</span>
+        <span className="text-muted-foreground text-sm">{t.selected}</span>
       </div>
     );
   }
@@ -74,7 +133,8 @@ export default function PracticePage() {
 }
 
 // Drop Zone Component
-function DropZone({ selectedOption, isCorrect, isSubmitted, onReset }: { selectedOption: QuestionOption | null; isCorrect: boolean | null; isSubmitted: boolean; onReset: () => void }) {
+function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language }: { selectedOption: QuestionOption | null; isCorrect: boolean | null; isSubmitted: boolean; onReset: () => void; language: 'id' | 'en' }) {
+  const t = uiText[language];
   const { setNodeRef, isOver } = useDroppable({
     id: 'answer-zone',
     disabled: !!selectedOption,
@@ -108,7 +168,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset }: { selecte
           </p>
           {!isSubmitted && (
             <p className="text-xs text-muted-foreground mt-4 uppercase tracking-wider">
-              Tap to remove
+              {t.tapToRemove}
             </p>
           )}
         </div>
@@ -117,7 +177,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset }: { selecte
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-2 text-2xl opacity-50">
             ✋
           </div>
-          <p className="text-sm font-medium">Drag the correct ayah here</p>
+          <p className="text-sm font-medium">{t.dragHere}</p>
         </div>
       )}
     </div>
@@ -128,6 +188,8 @@ function PracticeContent() {
   const searchParams = useSearchParams();
   const juzParam = searchParams.get('juz');
   const surahParam = searchParams.get('surah');
+  const limitParam = searchParams.get('limit');
+  const sessionLimit = limitParam ? parseInt(limitParam) : 10;
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [selectedOption, setSelectedOption] = useState<QuestionOption | null>(null);
@@ -144,9 +206,12 @@ function PracticeContent() {
   const [pointsGained, setPointsGained] = useState<number>(0);
   const [totalPoints, setTotalPoints] = useState<number>(0);
   const [sessionFinished, setSessionFinished] = useState<boolean>(false);
-  const [remainingQuestions, setRemainingQuestions] = useState<number>(10);
-  
+  const [remainingQuestions, setRemainingQuestions] = useState<number>(sessionLimit);
+  const [language, setLanguage] = useState<'id' | 'en'>('id');
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const t = uiText[language];
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -162,7 +227,7 @@ function PracticeContent() {
     })
   );
 
-  const fetchQuestion = async () => {
+  const fetchQuestion = useCallback(async () => {
     setIsPlaying(false);
     if (audioRef.current) {
       audioRef.current.pause();
@@ -175,6 +240,9 @@ function PracticeContent() {
       if (juzParam) params.append('juz', juzParam);
       if (surahParam) params.append('surah', surahParam);
       
+      const lang = localStorage.getItem('language') || 'id';
+      params.append('lang', lang);
+
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
@@ -195,11 +263,42 @@ function PracticeContent() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [juzParam, surahParam]);
 
   useEffect(() => {
+    // Initial load
+    const storedLang = localStorage.getItem('language') as 'id' | 'en';
+    if (storedLang) setLanguage(storedLang);
     fetchQuestion();
-  }, [juzParam, surahParam]);
+
+    // Listen for language changes
+    const handleLanguageChange = () => {
+      const newLang = localStorage.getItem('language') as 'id' | 'en';
+      if (newLang) {
+        setLanguage(newLang);
+        // Re-fetch question to apply new language
+        fetchQuestion();
+      }
+    };
+
+    window.addEventListener('language-change', handleLanguageChange);
+    return () => window.removeEventListener('language-change', handleLanguageChange);
+  }, [fetchQuestion]);
+
+  useEffect(() => {
+    if (question?.currentAyah.audio && audioRef.current) {
+      // Auto-play audio when question changes
+      // We use a small timeout to ensure the audio element is ready and to avoid race conditions
+      const timer = setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.play().catch(err => console.log('Auto-play blocked:', err));
+          setIsPlaying(true);
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [question]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -214,20 +313,25 @@ function PracticeContent() {
     if (over && over.id === 'answer-zone') {
       const option = active.data.current?.option as QuestionOption;
       setSelectedOption(option);
+      // Auto submit
+      handleCheck(option);
     }
   };
 
-  const handleCheck = async () => {
-    if (!selectedOption || !question) return;
+  const handleCheck = async (selectedOpt: QuestionOption | null = selectedOption) => {
+    if (!selectedOpt || !question) return;
 
     try {
       const res = await fetch('/api/validate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          selectedAyahId: selectedOption.id,
-          currentAyahId: question.currentAyah.id
-        })
+          selectedAyahId: selectedOpt.id,
+          currentAyahId: question.currentAyah.id,
+          sessionLimit: sessionLimit,
+        }),
       });
 
       if (!res.ok) throw new Error('Validation failed');
@@ -239,6 +343,13 @@ function PracticeContent() {
          setStreak(data.currentCorrectStreak ?? 0);
          setCombo(data.comboStreak ?? 0);
          setPointsGained(data.pointsGained ?? 0);
+
+         // Trigger confetti
+         confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+         });
       } else {
          setStreak(0);
          setCombo(0);
@@ -296,7 +407,7 @@ function PracticeContent() {
   if (isLoading && !question) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground animate-pulse">
-        <div className="text-lg tracking-widest uppercase">Loading Question...</div>
+        <div className="text-lg tracking-widest uppercase">{t.loading}</div>
       </div>
     );
   }
@@ -305,15 +416,15 @@ function PracticeContent() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-6">
         <div className="text-center space-y-8 animate-in zoom-in duration-500 max-w-md w-full">
-          <div className="space-y-2">
-             <div className="text-6xl mb-4 animate-bounce">🎉</div>
-             <h1 className="text-4xl font-bold text-primary">Sesi Selesai!</h1>
-             <p className="text-muted-foreground">Alhamdulillah, antum telah menyelesaikan 10 soal.</p>
-          </div>
+            <div className="space-y-2">
+               <div className="text-6xl mb-4 animate-bounce">🎉</div>
+               <h1 className="text-4xl font-bold text-primary">{t.sessionFinished}</h1>
+               <p className="text-muted-foreground">{t.completed} {sessionLimit} {t.questions}.</p>
+            </div>
 
           <div className="p-8 bg-card border border-border rounded-3xl shadow-xl space-y-6">
              <div className="flex flex-col items-center space-y-2">
-                <span className="text-sm text-muted-foreground uppercase tracking-wider">Total Poin</span>
+                <span className="text-sm text-muted-foreground uppercase tracking-wider">{t.totalPoints}</span>
                 <span className="text-5xl font-bold text-emerald-500 font-mono">{totalPoints}</span>
              </div>
              
@@ -322,11 +433,11 @@ function PracticeContent() {
              <div className="grid grid-cols-2 gap-4 text-center">
                 <div className="p-4 rounded-2xl bg-muted/30">
                    <div className="text-2xl font-bold text-foreground">{streak}</div>
-                   <div className="text-xs text-muted-foreground mt-1">Streak Terakhir</div>
+                   <div className="text-xs text-muted-foreground mt-1">{t.lastStreak}</div>
                 </div>
                  <div className="p-4 rounded-2xl bg-muted/30">
                    <div className="text-2xl font-bold text-foreground">{combo}</div>
-                   <div className="text-xs text-muted-foreground mt-1">Max Combo</div>
+                   <div className="text-xs text-muted-foreground mt-1">{t.maxCombo}</div>
                 </div>
              </div>
           </div>
@@ -338,24 +449,24 @@ function PracticeContent() {
                 setCombo(0);
                 setPointsGained(0);
                 setTotalPoints(0);
-                setRemainingQuestions(10);
+                setRemainingQuestions(sessionLimit);
                 fetchQuestion();
               }}
               className="w-full py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
-              Mulai Sesi Baru
+              {t.newSession}
             </button>
             <a 
               href="/leaderboard"
               className="w-full py-4 bg-transparent border border-border text-foreground rounded-full text-lg font-medium hover:bg-muted/50 transition-all duration-300"
             >
-              Lihat Leaderboard
+              {t.leaderboard}
             </a>
             <a 
               href="/"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
             >
-              Kembali ke Beranda
+              {t.home}
             </a>
           </div>
         </div>
@@ -375,9 +486,9 @@ function PracticeContent() {
           {/* Header / Verse Display */}
           <div className={`text-center space-y-6 w-full transition-opacity duration-500 ${!question ? 'opacity-0' : 'opacity-100'}`}>
             <div className="flex justify-between items-center w-full max-w-xs mx-auto text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/30 px-4 py-2 rounded-full">
-               <span>Question {Math.max(1, 11 - remainingQuestions)} / 10</span>
-               <span className="text-primary">{totalPoints} PTS</span>
-            </div>
+             <span>{t.question} {Math.max(1, (sessionLimit + 1) - remainingQuestions)} / {sessionLimit}</span>
+             <span className="text-primary">{totalPoints} {t.pts}</span>
+          </div>
 
             <div className="relative py-2 space-y-4">
               <h1 className="text-2xl md:text-4xl font-arabic leading-[2.0] md:leading-[2.2] text-foreground text-center" dir="rtl">
@@ -396,7 +507,7 @@ function PracticeContent() {
                     onClick={toggleAudio}
                     className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors text-sm font-medium"
                   >
-                    <span>{isPlaying ? 'Stop Recitation' : 'Play Recitation'}</span>
+                    <span>{isPlaying ? t.stop : t.play}</span>
                     <span className="text-lg">{isPlaying ? '⏹️' : '▶️'}</span>
                   </button>
                   <audio
@@ -412,7 +523,7 @@ function PracticeContent() {
             </div>
             
             <p className="text-sm text-muted-foreground/60 font-medium">
-              Surah {question?.currentAyah.surahName || question?.currentAyah.surah} • Ayah {question?.currentAyah.ayah}
+              {t.surah} {question?.currentAyah.surahName || question?.currentAyah.surah} • {t.ayah} {question?.currentAyah.ayah}
             </p>
           </div>
 
@@ -423,6 +534,7 @@ function PracticeContent() {
               isCorrect={feedback === 'correct'} 
               isSubmitted={isSubmitted} 
               onReset={handleResetSelection}
+              language={language}
             />
           </div>
 
@@ -435,6 +547,7 @@ function PracticeContent() {
                   option={option} 
                   isSelected={selectedOption?.id === option.id}
                   isDisabled={!!selectedOption}
+                  language={language}
                 />
               ))}
             </div>
@@ -443,37 +556,31 @@ function PracticeContent() {
           {/* Actions & Feedback */}
           <div className="w-full min-h-[100px] flex flex-col items-center justify-center space-y-4">
              {!isSubmitted ? (
-               selectedOption && (
-                <button 
-                  onClick={handleCheck}
-                  className="w-full py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium tracking-wide shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2"
-                >
-                  Confirm Selection
-                </button>
-               )
+               // Confirmation button removed for auto-submit
+               null
              ) : (
                 <div className="w-full space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
                   {feedback === 'incorrect' && correctAyah && (
                     <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
-                      <p className="text-amber-600 dark:text-amber-400 font-medium">The correct continuation is:</p>
+                      <p className="text-amber-600 dark:text-amber-400 font-medium">{t.incorrect}</p>
                       <p className="font-arabic text-xl text-foreground dir-rtl">{correctAyah.text}</p>
                     </div>
                   )}
                   
                   {feedback === 'correct' && (
                      <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 duration-500 space-y-4">
-                        <p className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wide text-lg">MasyaAllah, benar!</p>
+                        <p className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wide text-lg">{t.correct}</p>
                         
                         <div className="flex justify-center items-center gap-6">
                            <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 delay-100">
                               <span className="text-3xl font-bold text-emerald-500 font-mono">+{pointsGained}</span>
-                              <span className="text-[10px] uppercase tracking-wider text-emerald-600/70 font-bold mt-1">Points</span>
+                              <span className="text-[10px] uppercase tracking-wider text-emerald-600/70 font-bold mt-1">{t.pointsLabel}</span>
                            </div>
 
                            {combo > 1 && (
                              <div className={`flex flex-col items-center animate-in fade-in zoom-in delay-200 ${combo >= 3 ? 'scale-110' : ''}`}>
                                 <span className="text-3xl">🔥 x{combo}</span>
-                                <span className="text-[10px] uppercase tracking-wider text-orange-500/70 font-bold mt-1">Combo</span>
+                                <span className="text-[10px] uppercase tracking-wider text-orange-500/70 font-bold mt-1">{t.comboLabel}</span>
                              </div>
                            )}
                         </div>
@@ -484,7 +591,7 @@ function PracticeContent() {
                     onClick={fetchQuestion}
                     className="w-full py-4 bg-foreground text-background rounded-full text-lg font-medium tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
                   >
-                    Next Verse →
+                    {t.next}
                   </button>
                 </div>
              )}

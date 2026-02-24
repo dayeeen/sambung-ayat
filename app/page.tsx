@@ -20,6 +20,7 @@ export default function Home() {
   const [rangeStart, setRangeStart] = useState<string>('');
   const [rangeEnd, setRangeEnd] = useState<string>('');
   const [mode, setMode] = useState<'all' | 'single' | 'range'>('all');
+  const [questionLimit, setQuestionLimit] = useState<number>(10);
 
   useEffect(() => {
     if (selectedJuz) {
@@ -45,15 +46,15 @@ export default function Home() {
   };
 
   const handleStartPractice = () => {
-    if (!selectedJuz) return;
+    let url = selectedJuz ? `/practice?juz=${selectedJuz}` : '/practice?';
 
-    let url = `/practice?juz=${selectedJuz}`;
-    
     if (mode === 'single' && selectedSurah !== 'all') {
       url += `&surah=${selectedSurah}`;
     } else if (mode === 'range' && rangeStart && rangeEnd) {
       url += `&surah=${rangeStart}-${rangeEnd}`;
     }
+    
+    url += `&limit=${questionLimit}`;
 
     router.push(url);
   };
@@ -80,23 +81,57 @@ export default function Home() {
             </p>
           </div>
 
+          {/* Settings Section */}
+          <div className="w-full max-w-lg mx-auto bg-card border border-border rounded-xl p-6 shadow-sm space-y-6">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <span className="text-xl">⚙️</span> Settings
+            </h3>
+            
+            <div className="space-y-4">
+               <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Number of Questions
+                    </label>
+                    <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">
+                      {questionLimit}
+                    </span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="1" 
+                    max="10" 
+                    step="1"
+                    value={questionLimit}
+                    onChange={(e) => setQuestionLimit(parseInt(e.target.value))}
+                    className="w-full accent-primary h-2 bg-muted rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground px-1">
+                    <span>1</span>
+                    <span>5</span>
+                    <span>10</span>
+                  </div>
+               </div>
+            </div>
+          </div>
+
           {/* CTA Section */}
-          <div className="w-full flex flex-col items-center justify-center pt-8">
+          <div className="w-full flex flex-col items-center justify-center pt-2">
             {!showJuzSelection ? (
               <div className="flex flex-col sm:flex-row gap-6 animate-in fade-in zoom-in duration-300">
-                <Link
-                  href="/practice"
+                <button
+                  onClick={handleStartPractice}
                   className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
                 >
-                  Start Random
+                  Start Practice
                   <span className="opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300">→</span>
-                </Link>
+                </button>
                 
                 <button
                   onClick={() => setShowJuzSelection(true)}
                   className="px-8 py-4 bg-transparent border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 rounded-full text-lg font-medium transition-all duration-300 min-w-[200px]"
                 >
-                  Select Juz
+                  Filter by Juz
                 </button>
               </div>
             ) : (

@@ -54,7 +54,17 @@ export default function Header() {
         
         {user ? (
           <div className="flex gap-4 items-center bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full border border-border shadow-sm">
-            <span className="text-sm font-medium hidden sm:inline-block">{user.email?.split('@')[0]}</span>
+            <Link 
+              href="/leaderboard" 
+              className="text-xs sm:text-sm font-medium hover:text-primary transition-colors flex items-center gap-1.5"
+            >
+              <span className="text-primary">🏆</span>
+              <span className="hidden sm:inline">Leaderboard</span>
+            </Link>
+            <div className="w-px h-4 bg-border hidden sm:block"></div>
+            <span className="text-sm font-medium hidden sm:inline-block truncate max-w-[120px]">
+              {user.email?.split('@')[0]}
+            </span>
             <button 
                 onClick={handleLogout}
                 className="text-xs text-muted-foreground hover:text-red-500 transition-colors uppercase tracking-wider font-medium"

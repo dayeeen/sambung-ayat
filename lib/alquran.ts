@@ -88,9 +88,10 @@ export async function fetchJuz(juzNumber: number): Promise<Ayah[]> {
 /**
  * Fetches audio and translation for a specific ayah
  */
-export async function fetchAyahDetails(number: number): Promise<{ audio: string; translation: string }> {
+export async function fetchAyahDetails(number: number, lang: 'id' | 'en' = 'id'): Promise<{ audio: string; translation: string }> {
   // Use editions endpoint to get both in one call
-  const url = `${BASE_URL}/ayah/${number}/editions/ar.alafasy,id.indonesian`;
+  const translationEdition = lang === 'en' ? 'en.sahih' : 'id.indonesian';
+  const url = `${BASE_URL}/ayah/${number}/editions/ar.alafasy,${translationEdition}`;
   
   try {
     const data = await fetchWithRetry(url);
@@ -102,7 +103,7 @@ export async function fetchAyahDetails(number: number): Promise<{ audio: string;
 
     // Response data is an array of objects corresponding to the requested editions
     const audioData = response.data.find((item: any) => item.edition.identifier === 'ar.alafasy');
-    const translationData = response.data.find((item: any) => item.edition.identifier === 'id.indonesian');
+    const translationData = response.data.find((item: any) => item.edition.identifier === translationEdition);
 
     return {
       audio: audioData?.audio || '',

@@ -3,7 +3,7 @@ import { GeneratedQuestion, QuestionOption, Ayah } from '../types/quran';
 
 const TOTAL_AYAHS = 6236;
 
-export async function generateQuestion(juz?: number, surah?: string): Promise<GeneratedQuestion> {
+export async function generateQuestion(juz?: number, surah?: string, lang: 'id' | 'en' = 'id'): Promise<GeneratedQuestion> {
   let currentAyah: Ayah;
   let correctNext: Ayah;
   let potentialDistractors: Ayah[] = [];
@@ -76,7 +76,7 @@ export async function generateQuestion(juz?: number, surah?: string): Promise<Ge
   }
 
   // Fetch audio and translation for the current question ayah
-  const { audio, translation } = await fetchAyahDetails(currentAyah.number);
+  const { audio, translation } = await fetchAyahDetails(currentAyah.number, lang);
 
   // 3. Generate 3 distractors
   const options: QuestionOption[] = [];

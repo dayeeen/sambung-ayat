@@ -9,19 +9,21 @@ export function LanguageSwitcher() {
 
   // Load saved language preference
   useEffect(() => {
-    const savedLang = localStorage.getItem('app-language')
+    const savedLang = localStorage.getItem('language')
     if (savedLang) {
-      setLang(savedLang)
+      setLang(savedLang.toUpperCase())
     }
   }, [])
 
   const toggleLanguage = (newLang: string) => {
-    setLang(newLang)
-    localStorage.setItem('app-language', newLang)
+    setLang(newLang.toUpperCase())
+    localStorage.setItem('language', newLang.toLowerCase())
     setIsOpen(false)
-    // Here you would typically trigger a language change in your i18n context
-    // For now, we'll just reload the page to simulate a language switch if needed, 
-    // or just update state for visual feedback as requested.
+    
+    // Dispatch custom event for other components
+    window.dispatchEvent(new Event('language-change'));
+    
+    // Optional: Reload if we want to ensure everything updates cleanly
     // window.location.reload() 
   }
 
@@ -43,7 +45,7 @@ export function LanguageSwitcher() {
           />
           <div className="absolute right-0 top-full mt-2 w-32 bg-popover text-popover-foreground rounded-xl shadow-lg border border-border p-1 z-50 animate-in fade-in zoom-in-95 duration-200">
             <button
-              onClick={() => toggleLanguage('ID')}
+              onClick={() => toggleLanguage('id')}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
                 lang === 'ID' ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-muted'
               }`}
@@ -52,7 +54,7 @@ export function LanguageSwitcher() {
               {lang === 'ID' && <span className="text-xs">✓</span>}
             </button>
             <button
-              onClick={() => toggleLanguage('EN')}
+              onClick={() => toggleLanguage('en')}
               className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
                 lang === 'EN' ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-muted'
               }`}

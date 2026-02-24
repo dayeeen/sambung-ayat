@@ -9,15 +9,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const juzParam = searchParams.get('juz');
     const surahParam = searchParams.get('surah');
+    const langParam = searchParams.get('lang');
     
     const juz = juzParam ? parseInt(juzParam, 10) : undefined;
+    const lang = (langParam === 'en' ? 'en' : 'id') as 'id' | 'en';
     
     // Validate Juz
     if (juz && (isNaN(juz) || juz < 1 || juz > 30)) {
          return NextResponse.json({ error: 'Invalid Juz number. Must be between 1 and 30.' }, { status: 400 });
     }
 
-    const generated = await generateQuestion(juz, surahParam || undefined);
+    const generated = await generateQuestion(juz, surahParam || undefined, lang);
     
     // Transform to public Question type (hide correctAyahId)
     const publicQuestion: Question = {
