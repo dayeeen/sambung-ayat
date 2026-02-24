@@ -38,6 +38,8 @@ export interface Question {
     id: number;
     text: string;
     surah: number;
+    surahName?: string;
+    surahEnglishName?: string;
     ayah: number;
     audio?: string;
     translation?: string;

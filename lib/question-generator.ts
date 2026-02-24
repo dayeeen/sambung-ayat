@@ -3,7 +3,7 @@ import { GeneratedQuestion, QuestionOption, Ayah } from '../types/quran';
 
 const TOTAL_AYAHS = 6236;
 
-export async function generateQuestion(juz?: number): Promise<GeneratedQuestion> {
+export async function generateQuestion(juz?: number, surah?: string): Promise<GeneratedQuestion> {
   let currentAyah: Ayah;
   let correctNext: Ayah;
   let potentialDistractors: Ayah[] = [];
@@ -15,11 +15,28 @@ export async function generateQuestion(juz?: number): Promise<GeneratedQuestion>
     // Filter out:
     // 1. The very last ayah of the Quran (6236)
     // 2. The last ayah of any Surah (because there is no "next ayah" in the same surah context usually)
-    const validStarts = juzAyahs.filter(a => {
+    let validStarts = juzAyahs.filter(a => {
         const isLastInQuran = a.number === TOTAL_AYAHS;
         const isLastInSurah = a.numberInSurah === a.surah.numberOfAyahs;
         return !isLastInQuran && !isLastInSurah;
     });
+
+    // Apply Surah Filter if provided
+    if (surah) {
+        if (surah.includes('-')) {
+            // Range (e.g., "110-114")
+            const [start, end] = surah.split('-').map(Number);
+            validStarts = validStarts.filter(a => a.surah.number >= start && a.surah.number <= end);
+            potentialDistractors = juzAyahs.filter(a => a.surah.number >= start && a.surah.number <= end);
+        } else {
+            // Single Surah (e.g., "110")
+            const surahId = parseInt(surah);
+            validStarts = validStarts.filter(a => a.surah.number === surahId);
+            potentialDistractors = juzAyahs.filter(a => a.surah.number === surahId);
+        }
+    } else {
+        potentialDistractors = juzAyahs;
+    }
     
     if (validStarts.length === 0) {
        // Fallback to global random if something is wrong with Juz data or filtering
@@ -31,7 +48,9 @@ export async function generateQuestion(juz?: number): Promise<GeneratedQuestion>
     }
 
     correctNext = await fetchNextAyah(currentAyah.number);
-    potentialDistractors = juzAyahs;
+    // If we filtered distractors by surah, use that list, otherwise use whole Juz
+    if (!potentialDistractors.length) potentialDistractors = juzAyahs;
+
   } else {
     // Global Mode
     // Keep fetching until we get one that isn't the last ayah of a surah
@@ -123,6 +142,8 @@ export async function generateQuestion(juz?: number): Promise<GeneratedQuestion>
       id: currentAyah.number,
       text: currentAyah.text,
       surah: currentAyah.surah.number,
+      surahName: currentAyah.surah.name,
+      surahEnglishName: currentAyah.surah.englishName,
       ayah: currentAyah.numberInSurah,
       audio,
       translation

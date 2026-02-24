@@ -127,6 +127,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset }: { selecte
 function PracticeContent() {
   const searchParams = useSearchParams();
   const juzParam = searchParams.get('juz');
+  const surahParam = searchParams.get('surah');
 
   const [question, setQuestion] = useState<Question | null>(null);
   const [selectedOption, setSelectedOption] = useState<QuestionOption | null>(null);
@@ -160,7 +161,15 @@ function PracticeContent() {
     }
     setIsLoading(true);
     try {
-      const url = juzParam ? `/api/question?juz=${juzParam}` : '/api/question';
+      let url = '/api/question';
+      const params = new URLSearchParams();
+      if (juzParam) params.append('juz', juzParam);
+      if (surahParam) params.append('surah', surahParam);
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
       const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch question');
       const data: Question = await res.json();
@@ -181,7 +190,7 @@ function PracticeContent() {
 
   useEffect(() => {
     fetchQuestion();
-  }, [juzParam]);
+  }, [juzParam, surahParam]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -318,7 +327,7 @@ function PracticeContent() {
             </div>
             
             <p className="text-sm text-muted-foreground/60 font-medium">
-              Surah {question?.currentAyah.surah} • Ayah {question?.currentAyah.ayah}
+              Surah {question?.currentAyah.surahName || question?.currentAyah.surah} • Ayah {question?.currentAyah.ayah}
             </p>
           </div>
 

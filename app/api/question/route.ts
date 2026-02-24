@@ -8,6 +8,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const juzParam = searchParams.get('juz');
+    const surahParam = searchParams.get('surah');
+    
     const juz = juzParam ? parseInt(juzParam, 10) : undefined;
     
     // Validate Juz
@@ -15,7 +17,7 @@ export async function GET(request: NextRequest) {
          return NextResponse.json({ error: 'Invalid Juz number. Must be between 1 and 30.' }, { status: 400 });
     }
 
-    const generated = await generateQuestion(juz);
+    const generated = await generateQuestion(juz, surahParam || undefined);
     
     // Transform to public Question type (hide correctAyahId)
     const publicQuestion: Question = {
