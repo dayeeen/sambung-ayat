@@ -40,6 +40,7 @@ export async function GET(request: Request) {
                 id: supabaseUser.id,
                 email: supabaseUser.email,
                 provider: 'google',
+                displayName: supabaseUser.user_metadata.full_name || supabaseUser.user_metadata.name || 'Hamba Allah',
                 isGuest: false,
                 // Inherit stats
                 totalCorrect: guestUser.totalCorrect,
@@ -60,8 +61,8 @@ export async function GET(request: Request) {
               data: {
                 totalCorrect: { increment: guestUser.totalCorrect },
                 totalAttempted: { increment: guestUser.totalAttempted },
-                // We don't merge streaks, just keep the logged-in user's streak or update if guest was better?
-                // Let's leave streak as is for the logged-in user.
+                // Update display name if missing
+                displayName: dbUser.displayName ? undefined : (supabaseUser.user_metadata.full_name || supabaseUser.user_metadata.name || 'Hamba Allah'),
               }
             })
           }
@@ -98,7 +99,16 @@ export async function GET(request: Request) {
                   id: supabaseUser.id,
                   email: supabaseUser.email,
                   provider: 'google',
-                  isGuest: false
+                  displayName: supabaseUser.user_metadata.full_name || supabaseUser.user_metadata.name || 'Hamba Allah',
+                  isGuest: false,
+                }
+             })
+          } else if (!dbUser.displayName) {
+             // Update display name if missing for existing user
+             await prisma.user.update({
+                where: { id: dbUser.id },
+                data: {
+                   displayName: supabaseUser.user_metadata.full_name || supabaseUser.user_metadata.name || 'Hamba Allah'
                 }
              })
           }

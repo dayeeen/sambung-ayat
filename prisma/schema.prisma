@@ -22,11 +22,15 @@ model User {
   isGuest         Boolean  @default(true)
   email           String?  @unique
   provider        String?
+  displayName     String?
 
   totalCorrect    Int      @default(0)
   totalAttempted  Int      @default(0)
   currentStreak   Int      @default(0)
   longestStreak   Int      @default(0)
+  currentCorrectStreak Int @default(0)
+  longestCorrectStreak Int @default(0)
+  totalPoints     Int      @default(0)
 
   sessions        Session[]
   answers         Answer[]
@@ -39,6 +43,10 @@ model Session {
   endedAt         DateTime?
   totalQuestions  Int      @default(0)
   correctAnswers  Int      @default(0)
+  
+  comboStreak     Int      @default(0)
+  maxCombo        Int      @default(0)
+  totalPoints     Int      @default(0)
 
   user            User     @relation(fields: [userId], references: [id])
   answers         Answer[]

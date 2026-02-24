@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Session" ADD COLUMN     "comboStreak" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "maxCombo" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "totalPoints" INTEGER NOT NULL DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "totalPoints" INTEGER NOT NULL DEFAULT 0;

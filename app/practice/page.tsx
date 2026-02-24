@@ -137,6 +137,15 @@ function PracticeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeDragItem, setActiveDragItem] = useState<QuestionOption | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [streak, setStreak] = useState<number>(0);
+  
+  // New State for Points/Combo
+  const [combo, setCombo] = useState<number>(0);
+  const [pointsGained, setPointsGained] = useState<number>(0);
+  const [totalPoints, setTotalPoints] = useState<number>(0);
+  const [sessionFinished, setSessionFinished] = useState<boolean>(false);
+  const [remainingQuestions, setRemainingQuestions] = useState<number>(10);
+  
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const sensors = useSensors(
@@ -226,6 +235,22 @@ function PracticeContent() {
       const data: ValidationResponse = await res.json();
       
       setFeedback(data.isCorrect ? 'correct' : 'incorrect');
+      if (data.isCorrect) {
+         setStreak(data.currentCorrectStreak ?? 0);
+         setCombo(data.comboStreak ?? 0);
+         setPointsGained(data.pointsGained ?? 0);
+      } else {
+         setStreak(0);
+         setCombo(0);
+         setPointsGained(0);
+      }
+      
+      if (data.totalPoints !== undefined) setTotalPoints(data.totalPoints);
+      if (data.remainingQuestions !== undefined) setRemainingQuestions(data.remainingQuestions);
+      if (data.sessionFinished) {
+        setSessionFinished(true);
+      }
+
       if (data.correctAyah) {
         // Map correctAyah to QuestionOption format if needed
         setCorrectAyah({
@@ -276,6 +301,68 @@ function PracticeContent() {
     );
   }
 
+  if (sessionFinished) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-6">
+        <div className="text-center space-y-8 animate-in zoom-in duration-500 max-w-md w-full">
+          <div className="space-y-2">
+             <div className="text-6xl mb-4 animate-bounce">🎉</div>
+             <h1 className="text-4xl font-bold text-primary">Sesi Selesai!</h1>
+             <p className="text-muted-foreground">Alhamdulillah, antum telah menyelesaikan 10 soal.</p>
+          </div>
+
+          <div className="p-8 bg-card border border-border rounded-3xl shadow-xl space-y-6">
+             <div className="flex flex-col items-center space-y-2">
+                <span className="text-sm text-muted-foreground uppercase tracking-wider">Total Poin</span>
+                <span className="text-5xl font-bold text-emerald-500 font-mono">{totalPoints}</span>
+             </div>
+             
+             <div className="w-full h-px bg-border/50" />
+             
+             <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="p-4 rounded-2xl bg-muted/30">
+                   <div className="text-2xl font-bold text-foreground">{streak}</div>
+                   <div className="text-xs text-muted-foreground mt-1">Streak Terakhir</div>
+                </div>
+                 <div className="p-4 rounded-2xl bg-muted/30">
+                   <div className="text-2xl font-bold text-foreground">{combo}</div>
+                   <div className="text-xs text-muted-foreground mt-1">Max Combo</div>
+                </div>
+             </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={() => {
+                setSessionFinished(false);
+                setCombo(0);
+                setPointsGained(0);
+                setTotalPoints(0);
+                setRemainingQuestions(10);
+                fetchQuestion();
+              }}
+              className="w-full py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            >
+              Mulai Sesi Baru
+            </button>
+            <a 
+              href="/leaderboard"
+              className="w-full py-4 bg-transparent border border-border text-foreground rounded-full text-lg font-medium hover:bg-muted/50 transition-all duration-300"
+            >
+              Lihat Leaderboard
+            </a>
+            <a 
+              href="/"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
+            >
+              Kembali ke Beranda
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4 sm:p-6 transition-colors duration-500 overflow-x-hidden">
       <DndContext 
@@ -287,11 +374,9 @@ function PracticeContent() {
           
           {/* Header / Verse Display */}
           <div className={`text-center space-y-6 w-full transition-opacity duration-500 ${!question ? 'opacity-0' : 'opacity-100'}`}>
-            <div className="space-y-2">
-              <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-[0.2em]">
-                Complete the Verse
-              </p>
-              <div className="w-12 h-0.5 bg-border mx-auto rounded-full" />
+            <div className="flex justify-between items-center w-full max-w-xs mx-auto text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/30 px-4 py-2 rounded-full">
+               <span>Question {Math.max(1, 11 - remainingQuestions)} / 10</span>
+               <span className="text-primary">{totalPoints} PTS</span>
             </div>
 
             <div className="relative py-2 space-y-4">
@@ -376,8 +461,22 @@ function PracticeContent() {
                   )}
                   
                   {feedback === 'correct' && (
-                     <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                        <p className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wide">Masha'Allah, Correct ✨</p>
+                     <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 duration-500 space-y-4">
+                        <p className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wide text-lg">MasyaAllah, benar!</p>
+                        
+                        <div className="flex justify-center items-center gap-6">
+                           <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 delay-100">
+                              <span className="text-3xl font-bold text-emerald-500 font-mono">+{pointsGained}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-emerald-600/70 font-bold mt-1">Points</span>
+                           </div>
+
+                           {combo > 1 && (
+                             <div className={`flex flex-col items-center animate-in fade-in zoom-in delay-200 ${combo >= 3 ? 'scale-110' : ''}`}>
+                                <span className="text-3xl">🔥 x{combo}</span>
+                                <span className="text-[10px] uppercase tracking-wider text-orange-500/70 font-bold mt-1">Combo</span>
+                             </div>
+                           )}
+                        </div>
                      </div>
                   )}
 

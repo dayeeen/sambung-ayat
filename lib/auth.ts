@@ -23,6 +23,7 @@ export async function getCurrentUser() {
           id: supabaseUser.id,
           email: supabaseUser.email,
           provider: supabaseUser.app_metadata.provider || 'google',
+          displayName: supabaseUser.user_metadata.full_name || supabaseUser.user_metadata.name || 'Hamba Allah',
           isGuest: false
         }
       })
@@ -45,7 +46,8 @@ export async function getCurrentUser() {
         guestUser = await prisma.user.create({
           data: {
             id: guestId,
-            isGuest: true
+            isGuest: true,
+            displayName: `Hamba-${Math.floor(Math.random() * 9000) + 1000}`
           }
         })
       } catch (e) {
