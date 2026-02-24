@@ -80,3 +80,55 @@ export function checkAnswer(userInput: string, correctText: string): boolean {
   
   return normalizedInput === normalizedCorrect;
 }
+
+export interface Question {
+  currentAyah: Ayah;
+  correctNext: Ayah;
+  options: Ayah[];
+}
+
+export function generateQuestion(): Question {
+  const currentAyah = getRandomAyah();
+  const correctNext = getNextAyah(currentAyah.surah, currentAyah.ayah);
+
+  if (!correctNext) {
+    // Should not happen due to getRandomAyah logic, but for safety:
+    return generateQuestion();
+  }
+
+  // Get 3 distractors
+  const distractors: Ayah[] = [];
+  const maxAttempts = 20; // Prevent infinite loop if dataset is small
+  
+  while (distractors.length < 3) {
+    const randomIdx = Math.floor(Math.random() * quranData.length);
+    const candidate = quranData[randomIdx] as Ayah;
+
+    // Distractor rules:
+    // 1. Not the correct next ayah
+    // 2. Not the current ayah (unlikely but possible)
+    // 3. Not already in distractors
+    const isDuplicate = distractors.some(d => d.surah === candidate.surah && d.ayah === candidate.ayah);
+    const isCorrect = candidate.surah === correctNext.surah && candidate.ayah === correctNext.ayah;
+    const isCurrent = candidate.surah === currentAyah.surah && candidate.ayah === currentAyah.ayah;
+
+    if (!isDuplicate && !isCorrect && !isCurrent) {
+      distractors.push(candidate);
+    }
+  }
+
+  // Combine and shuffle
+  const options = [...distractors, correctNext];
+  
+  // Simple shuffle
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [options[i], options[j]] = [options[j], options[i]];
+  }
+
+  return {
+    currentAyah,
+    correctNext,
+    options
+  };
+}

@@ -2,34 +2,77 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-          Sambung Ayat
-        </h1>
-        <p className="text-lg leading-8 text-gray-600 max-w-xl">
-          A minimalist tool to practice your Qur'an memorization. Continue the verse and test your recall.
-        </p>
+    <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-20 text-center">
+        <div className="max-w-3xl space-y-12 animate-fade-in">
+          
+          {/* Hero Section */}
+          <div className="space-y-6">
+            <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-sm font-medium tracking-wide mb-4">
+              ✨ Beta Release
+            </div>
+            
+            <h1 className="text-5xl sm:text-7xl font-bold tracking-tight text-foreground">
+              Sambung <span className="text-primary font-serif italic">Ayat</span>
+            </h1>
+            
+            <p className="text-xl sm:text-2xl text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              A calm, focused space to practice your Qur'an memorization. 
+              <br className="hidden sm:block" />
+              Continue the verse, test your recall, find peace.
+            </p>
+          </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <Link
-            href="/practice"
-            className="rounded-full border border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-          >
-            Start Practice
-          </Link>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://github.com/yourusername/sambung-ayat"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View Source
-          </a>
+          {/* CTA Section */}
+          <div className="flex flex-col sm:flex-row gap-6 items-center justify-center pt-8">
+            <Link
+              href="/practice"
+              className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
+            >
+              Start Practice
+              <span className="opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300">→</span>
+            </Link>
+            
+            <a
+              href="https://github.com/dayeeen/sambung-ayat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-4 bg-transparent border border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 rounded-full text-lg font-medium transition-all duration-300 min-w-[200px]"
+            >
+              View Source
+            </a>
+          </div>
+
+          {/* Features Grid (Subtle) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-16 max-w-4xl mx-auto text-sm text-muted-foreground">
+            <div className="space-y-2">
+              <div className="w-10 h-10 bg-primary-bg rounded-full flex items-center justify-center mx-auto text-primary mb-3">
+                📖
+              </div>
+              <h3 className="font-semibold text-foreground">Verse by Verse</h3>
+              <p>Practice continuously with instant feedback on your recitation recall.</p>
+            </div>
+            <div className="space-y-2">
+              <div className="w-10 h-10 bg-primary-bg rounded-full flex items-center justify-center mx-auto text-primary mb-3">
+                🧠
+              </div>
+              <h3 className="font-semibold text-foreground">Active Recall</h3>
+              <p>Strengthen your memory by actively retrieving the next ayah.</p>
+            </div>
+            <div className="space-y-2">
+              <div className="w-10 h-10 bg-primary-bg rounded-full flex items-center justify-center mx-auto text-primary mb-3">
+                🌿
+              </div>
+              <h3 className="font-semibold text-foreground">Distraction Free</h3>
+              <p>No ads, no points, no leaderboards. Just you and the Qur'an.</p>
+            </div>
+          </div>
+
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center text-gray-500 text-sm">
-        <p>© {new Date().getFullYear()} Sambung Ayat. All rights reserved.</p>
+
+      <footer className="py-8 text-center text-sm text-muted-foreground/60">
+        <p>© {new Date().getFullYear()} Sambung Ayat. Built with intention.</p>
       </footer>
     </div>
   );

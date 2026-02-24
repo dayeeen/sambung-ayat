@@ -1,0 +1,25 @@
+import { NextResponse } from 'next/server';
+import { generateQuestion } from '../../../lib/question-generator';
+import { Question } from '../../../types/quran';
+
+export const revalidate = 0; // Dynamic, no caching for question generation
+
+export async function GET() {
+  try {
+    const generated = await generateQuestion();
+    
+    // Transform to public Question type (hide correctAyahId)
+    const publicQuestion: Question = {
+      currentAyah: generated.currentAyah,
+      options: generated.options
+    };
+
+    return NextResponse.json(publicQuestion);
+  } catch (error) {
+    console.error('Question API Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to generate question. Please try again.' },
+      { status: 503 }
+    );
+  }
+}

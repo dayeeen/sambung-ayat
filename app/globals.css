@@ -1,27 +1,93 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Neutral/Calm Backgrounds */
+  --background: #FAFAF9; /* Stone 50 */
+  --foreground: #44403C; /* Stone 700 */
+  --muted: #E7E5E4; /* Stone 200 */
+  --muted-foreground: #78716C; /* Stone 500 */
+  
+  /* Primary Action / Success (Muted Green) */
+  --primary: #059669; /* Emerald 600 */
+  --primary-foreground: #FFFFFF;
+  --primary-bg: #D1FAE5; /* Emerald 100 */
+  
+  /* Feedback / Warning (Neutral Amber) */
+  --warning: #D97706; /* Amber 600 */
+  --warning-bg: #FEF3C7; /* Amber 100 */
+  
+  /* Input & Borders */
+  --border: #E7E5E4; /* Stone 200 */
+  --input: #FFFFFF;
+  --ring: #A8A29E; /* Stone 400 */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-bg: var(--primary-bg);
+  
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-arabic: var(--font-arabic);
+  
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Dark Mode - Deep Neutral Gray/Stone */
+    --background: #1C1917; /* Stone 900 */
+    --foreground: #E7E5E4; /* Stone 200 */
+    --muted: #292524; /* Stone 800 */
+    --muted-foreground: #A8A29E; /* Stone 400 */
+    
+    --primary: #10B981; /* Emerald 500 */
+    --primary-foreground: #022C22; /* Emerald 950 */
+    --primary-bg: #064E3B; /* Emerald 900 */
+    
+    --warning: #F59E0B; /* Amber 500 */
+    --warning-bg: #451A03; /* Amber 950 (adjusted for contrast) */
+    
+    --border: #292524; /* Stone 800 */
+    --input: #0C0A09; /* Stone 950 */
+    --ring: #57534E; /* Stone 600 */
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Utilities for Arabic Typography */
+.font-arabic {
+  line-height: 2.0;
+  letter-spacing: 0.02em;
 }
