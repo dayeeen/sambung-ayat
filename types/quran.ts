@@ -54,7 +54,7 @@ export interface GeneratedQuestion extends Question {
 
 export interface ValidationRequest {
   selectedAyahId: number;
-  correctAyahId: number;
+  currentAyahId: number;
 }
 
 export interface ValidationResponse {
