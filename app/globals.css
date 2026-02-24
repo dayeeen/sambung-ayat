@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   /* Neutral/Calm Backgrounds */
   --background: #FAFAF9; /* Stone 50 */
@@ -63,25 +65,23 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Dark Mode - Deep Neutral Gray/Stone */
-    --background: #1C1917; /* Stone 900 */
-    --foreground: #E7E5E4; /* Stone 200 */
-    --muted: #292524; /* Stone 800 */
-    --muted-foreground: #A8A29E; /* Stone 400 */
-    
-    --primary: #10B981; /* Emerald 500 */
-    --primary-foreground: #022C22; /* Emerald 950 */
-    --primary-bg: #064E3B; /* Emerald 900 */
-    
-    --warning: #F59E0B; /* Amber 500 */
-    --warning-bg: #451A03; /* Amber 950 (adjusted for contrast) */
-    
-    --border: #292524; /* Stone 800 */
-    --input: #0C0A09; /* Stone 950 */
-    --ring: #57534E; /* Stone 600 */
-  }
+.dark {
+  /* Dark Mode - Deep Neutral Gray/Stone */
+  --background: #1C1917; /* Stone 900 */
+  --foreground: #E7E5E4; /* Stone 200 */
+  --muted: #292524; /* Stone 800 */
+  --muted-foreground: #A8A29E; /* Stone 400 */
+  
+  --primary: #10B981; /* Emerald 500 */
+  --primary-foreground: #022C22; /* Emerald 950 */
+  --primary-bg: #064E3B; /* Emerald 900 */
+  
+  --warning: #F59E0B; /* Amber 500 */
+  --warning-bg: #451A03; /* Amber 950 (adjusted for contrast) */
+  
+  --border: #292524; /* Stone 800 */
+  --input: #0C0A09; /* Stone 950 */
+  --ring: #57534E; /* Stone 600 */
 }
 
 body {

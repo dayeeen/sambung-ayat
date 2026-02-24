@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { ModeToggle } from './mode-toggle'
+import { LanguageSwitcher } from './language-switcher'
 
 export default function Header() {
   const [user, setUser] = useState<any>(null)
@@ -46,7 +48,10 @@ export default function Header() {
         </Link>
       </div>
       
-      <div className="pointer-events-auto">
+      <div className="pointer-events-auto flex items-center gap-2 sm:gap-4">
+        <LanguageSwitcher />
+        <ModeToggle />
+        
         {user ? (
           <div className="flex gap-4 items-center bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full border border-border shadow-sm">
             <span className="text-sm font-medium hidden sm:inline-block">{user.email?.split('@')[0]}</span>
