@@ -45,7 +45,7 @@ export default function LeaderboardPage() {
   }, [sortBy]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 flex flex-col items-center">
+    <div className="min-h-screen bg-background text-foreground pt-24 pb-6 px-6 flex flex-col items-center">
       <div className="w-full max-w-2xl space-y-8">
         
         {/* Header */}
@@ -113,11 +113,11 @@ export default function LeaderboardPage() {
           ) : (
             <div className="divide-y divide-border">
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 p-4 bg-muted/30 text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                <div className="col-span-2 text-center">#</div>
-                <div className="col-span-6">Nama</div>
-                <div className="col-span-2 text-center">{sortBy === 'points' ? 'Poin' : 'Streak'}</div>
-                <div className="col-span-2 text-center">Total Benar</div>
+              <div className="grid grid-cols-10 sm:grid-cols-12 gap-2 sm:gap-4 p-4 bg-muted/30 text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                <div className="col-span-2 sm:col-span-2 text-center">#</div>
+                <div className="col-span-6 sm:col-span-6">Nama</div>
+                <div className="col-span-2 sm:col-span-2 text-center">{sortBy === 'points' ? 'Poin' : 'Streak'}</div>
+                <div className="hidden sm:block sm:col-span-2 text-center">Total Benar</div>
               </div>
 
               {users.map((user, index) => {
@@ -128,14 +128,14 @@ export default function LeaderboardPage() {
                 return (
                   <div 
                     key={user.id}
-                    className={`grid grid-cols-12 gap-4 p-4 items-center transition-colors hover:bg-muted/20
+                    className={`grid grid-cols-10 sm:grid-cols-12 gap-2 sm:gap-4 p-4 items-center transition-colors hover:bg-muted/20
                       ${isTop1 ? 'bg-amber-500/5 dark:bg-amber-500/10' : ''}
                     `}
                   >
                     {/* Rank */}
-                    <div className="col-span-2 flex justify-center">
+                    <div className="col-span-2 sm:col-span-2 flex justify-center">
                       <div className={`
-                        w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm
+                        w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center rounded-full font-bold text-xs sm:text-sm
                         ${isTop1 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 ring-2 ring-amber-500/20' : 
                           isTop3 ? 'bg-muted text-foreground' : 'text-muted-foreground'}
                       `}>
@@ -144,13 +144,13 @@ export default function LeaderboardPage() {
                     </div>
 
                     {/* Name */}
-                    <div className="col-span-6 font-medium truncate flex items-center gap-2">
+                    <div className="col-span-6 sm:col-span-6 font-medium truncate flex items-center gap-2 text-sm sm:text-base">
                       {user.displayName || 'Hamba Allah'}
-                      {isTop1 && <span className="text-amber-500">👑</span>}
+                      {isTop1 && <span className="text-amber-500 text-xs sm:text-sm">👑</span>}
                     </div>
 
                     {/* Streak / Points */}
-                    <div className="col-span-2 text-center font-mono text-sm">
+                    <div className="col-span-2 sm:col-span-2 text-center font-mono text-xs sm:text-sm">
                       <span className={`font-bold ${sortBy === 'points' ? 'text-emerald-500' : 'text-orange-500'}`}>
                         {sortBy === 'points' 
                           ? `🌟 ${user.totalPoints || 0}`
@@ -159,13 +159,13 @@ export default function LeaderboardPage() {
                             : `🔥 ${user.longestCorrectStreak}`
                         }
                       </span>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
+                      <div className="text-[9px] sm:text-[10px] text-muted-foreground uppercase tracking-wider mt-1 hidden sm:block">
                         {sortBy === 'points' ? 'Total Poin' : (sortBy === 'daily' ? 'Hari' : 'Benar')}
                       </div>
                     </div>
 
                     {/* Total */}
-                    <div className="col-span-2 text-center font-mono text-sm text-muted-foreground">
+                    <div className="hidden sm:block sm:col-span-2 text-center font-mono text-sm text-muted-foreground">
                       {user.totalCorrect}
                     </div>
                   </div>

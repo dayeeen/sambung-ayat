@@ -41,9 +41,9 @@ export default function Header() {
   }
 
   return (
-    <header className="absolute top-0 w-full flex justify-between items-center p-6 z-50 pointer-events-none">
+    <header className="absolute top-0 w-full flex justify-between items-center p-4 sm:p-6 z-50 pointer-events-none">
       <div className="pointer-events-auto">
-        <Link href="/" className="text-xl sm:text-2xl font-bold tracking-tight hover:opacity-80 transition-opacity font-arabic">
+        <Link href="/" className="text-lg sm:text-2xl font-bold tracking-tight hover:opacity-80 transition-opacity font-arabic">
             Sambung <span className="text-primary font-serif italic">Ayat</span>
         </Link>
       </div>
@@ -53,7 +53,7 @@ export default function Header() {
         <ModeToggle />
         
         {user ? (
-          <div className="flex gap-4 items-center bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full border border-border shadow-sm">
+          <div className="flex gap-2 sm:gap-4 items-center bg-background/80 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-border shadow-sm">
             <span className="text-sm font-medium hidden sm:inline-block">{user.email?.split('@')[0]}</span>
             <button 
                 onClick={handleLogout}
@@ -65,9 +65,9 @@ export default function Header() {
         ) : (
           <button 
             onClick={handleLogin}
-            className="px-5 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+            className="px-4 py-1.5 sm:px-5 sm:py-2 bg-primary text-primary-foreground text-xs sm:text-sm font-medium rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
           >
-            Login to save
+            Login
           </button>
         )}
       </div>

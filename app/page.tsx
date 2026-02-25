@@ -235,48 +235,48 @@ export default function Home() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500 overflow-hidden relative">
+    <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-hidden overflow-y-auto relative">
       <IslamicPattern />
       
-      <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-20 text-center relative z-10">
-        <div className="max-w-4xl w-full space-y-12 animate-fade-in flex flex-col items-center">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 pt-24 pb-12 sm:p-20 text-center relative z-10 w-full min-h-full">
+        <div className="max-w-4xl w-full space-y-8 sm:space-y-12 animate-fade-in flex flex-col items-center my-auto">
           
           {/* Hero Section */}
-          <div className="space-y-8 max-w-3xl relative">
+          <div className="space-y-6 sm:space-y-8 max-w-3xl relative w-full px-4 sm:px-0">
             {/* Decorative Element Top */}
-            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10" />
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-48 sm:h-64 bg-primary/5 rounded-full blur-3xl -z-10" />
 
             <Bismillah />
             
             <div className="space-y-2">
-                <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-sm font-medium tracking-wide mb-4">
+                <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-xs sm:text-sm font-medium tracking-wide mb-4">
                     ✨ {t.beta}
                 </div>
-              <h1 className="text-5xl sm:text-7xl font-bold tracking-tight text-foreground font-arabic leading-tight">
+              <h1 className="text-4xl sm:text-7xl font-bold tracking-tight text-foreground font-arabic leading-tight">
                 {t.title} <span className="text-primary font-serif italic relative inline-block">
                   Ayat
                   <span className="absolute -bottom-2 left-0 w-full h-1 bg-primary/20 rounded-full"></span>
                 </span>
               </h1>
-              <p className="text-sm uppercase tracking-[0.2em] text-primary/60 font-semibold mt-4">
+              <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-primary/60 font-semibold mt-4">
                 {t.subtitle}
               </p>
             </div>
             
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed font-serif">
+            <p className="text-base sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed font-serif px-2">
               {t.verse}
               <br/>
-              <span className="text-sm italic mt-2 block opacity-70">(QS. Al-Qamar: 17)</span>
+              <span className="text-xs sm:text-sm italic mt-2 block opacity-70">(QS. Al-Qamar: 17)</span>
             </p>
           </div>
 
           {/* CTA Section */}
-          <div className="w-full flex flex-col items-center justify-center pt-4">
+          <div className="w-full flex flex-col items-center justify-center pt-4 px-4 sm:px-0">
             {!showJuzSelection && !showSettings ? (
-              <div className="flex flex-col sm:flex-row gap-6 animate-in fade-in zoom-in duration-500 w-full max-w-md mx-auto">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-in fade-in zoom-in duration-500 w-full max-w-md mx-auto">
                 <button
                   onClick={() => setShowSettings(true)}
-                  className="group relative flex-1 inline-flex items-center justify-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                  className="group relative w-full sm:flex-1 inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-primary text-primary-foreground rounded-full text-base sm:text-lg font-medium tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
                 >
                   <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
                   <span className="relative">{t.startPractice}</span>
@@ -285,7 +285,7 @@ export default function Home() {
                 
                 <button
                   onClick={() => setShowJuzSelection(true)}
-                  className="flex-1 px-8 py-4 bg-background border border-border text-muted-foreground hover:text-primary hover:border-primary/30 rounded-full text-lg font-medium transition-all duration-300 hover:bg-primary/5"
+                  className="w-full sm:flex-1 px-6 sm:px-8 py-3 sm:py-4 bg-background border border-border text-muted-foreground hover:text-primary hover:border-primary/30 rounded-full text-base sm:text-lg font-medium transition-all duration-300 hover:bg-primary/5"
                 >
                   {t.selectJuz}
                 </button>
@@ -308,7 +308,7 @@ export default function Home() {
                         
                         <button
                             onClick={handleStartPractice}
-                            className="w-full py-4 bg-primary text-primary-foreground rounded-xl text-lg font-medium tracking-wide shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.99]"
+                            className="w-full py-3 sm:py-4 bg-primary text-primary-foreground rounded-xl text-lg font-medium tracking-wide shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.99]"
                         >
                             {t.startPractice}
                         </button>

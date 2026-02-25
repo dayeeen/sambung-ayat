@@ -108,11 +108,11 @@ function DraggableOption({ option, isSelected, isDisabled, language }: { option:
       style={style}
       {...listeners}
       {...attributes}
-      className={`w-full p-4 rounded-xl border border-border bg-white dark:bg-stone-800 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-grab active:cursor-grabbing touch-none
+      className={`w-full p-4 rounded-xl border border-border bg-white dark:bg-stone-800 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-grab active:cursor-grabbing touch-none select-none
         ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
     >
-      <p className="font-arabic text-xl md:text-2xl text-center leading-loose" dir="rtl">
+      <p className="font-arabic text-lg sm:text-xl md:text-2xl text-center leading-relaxed" dir="rtl">
         {option.text}
       </p>
     </div>
@@ -143,7 +143,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language }:
     <div
       ref={setNodeRef}
       onClick={!isSubmitted && selectedOption ? onReset : undefined}
-      className={`w-full min-h-[160px] rounded-[2rem] border-2 transition-all duration-300 flex items-center justify-center p-6 relative
+      className={`w-full min-h-[120px] sm:min-h-[160px] rounded-[2rem] border-2 transition-all duration-300 flex items-center justify-center p-6 relative
         ${selectedOption 
           ? isSubmitted
             ? isCorrect 
@@ -158,7 +158,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language }:
     >
       {selectedOption ? (
         <div className={`text-center w-full animate-in fade-in zoom-in-95 duration-300`}>
-          <p className={`font-arabic text-2xl md:text-3xl leading-[2.2] dir-rtl 
+          <p dir="rtl" className={`font-arabic text-xl sm:text-2xl md:text-3xl leading-[2.2] 
             ${isSubmitted 
               ? isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
               : 'text-foreground'
@@ -247,8 +247,8 @@ function PracticeContent() {
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250,
-        tolerance: 5,
+        delay: 50,
+        tolerance: 10,
       },
     })
   );
@@ -437,8 +437,8 @@ function PracticeContent() {
 
   if (sessionFinished) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-6">
-        <div className="text-center space-y-8 animate-in zoom-in duration-500 max-w-md w-full">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-6 overflow-y-auto">
+        <div className="text-center space-y-8 animate-in zoom-in duration-500 max-w-md w-full my-auto">
             <div className="space-y-2">
                <div className="text-6xl mb-4 animate-bounce">🎉</div>
                <h1 className="text-4xl font-bold text-primary">{t.sessionFinished}</h1>
@@ -503,7 +503,7 @@ function PracticeContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4 sm:p-6 transition-colors duration-500 overflow-x-hidden">
+    <div className="min-h-screen flex flex-col items-center bg-background text-foreground pt-20 pb-4 px-4 sm:p-6 transition-colors duration-500 overflow-x-hidden overflow-y-auto">
       <DndContext 
         sensors={sensors} 
         onDragStart={handleDragStart} 
@@ -512,25 +512,25 @@ function PracticeContent() {
         {isStarting && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm animate-in fade-in duration-300">
              <div className="flex flex-col items-center justify-center gap-8">
-               <div className="text-[10rem] font-bold text-primary animate-bounce font-mono leading-none">
+               <div className="text-8xl sm:text-[10rem] font-bold text-primary animate-bounce font-mono leading-none">
                   {countdown}
                </div>
-               <p className="text-muted-foreground animate-pulse text-2xl tracking-[0.5em] uppercase font-light">Bersiap...</p>
+               <p className="text-muted-foreground animate-pulse text-xl sm:text-2xl tracking-[0.5em] uppercase font-light text-center px-4">Bersiap...</p>
             </div>
           </div>
         )}
 
-        <main className="w-full max-w-xl flex flex-col items-center space-y-8 md:space-y-12 pb-20">
+        <main className="w-full max-w-xl flex flex-col items-center space-y-6 sm:space-y-12 pb-20 px-4 my-auto">
           
           {/* Header / Verse Display */}
-          <div className={`text-center space-y-6 w-full transition-opacity duration-500 ${!question ? 'opacity-0' : 'opacity-100'}`}>
+          <div className={`text-center space-y-4 sm:space-y-6 w-full transition-opacity duration-500 ${!question ? 'opacity-0' : 'opacity-100'}`}>
             <div className="flex justify-between items-center w-full max-w-xs mx-auto text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/30 px-4 py-2 rounded-full">
              <span>{t.question} {Math.max(1, (sessionLimit + 1) - remainingQuestions)} / {sessionLimit}</span>
              <span className="text-primary">{totalPoints} {t.pts}</span>
           </div>
 
             <div className="relative py-2 space-y-4">
-              <h1 className="text-2xl md:text-4xl font-arabic leading-[2.0] md:leading-[2.2] text-foreground text-center" dir="rtl">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-arabic leading-[1.8] sm:leading-[2.0] md:leading-[2.2] text-foreground text-center px-2" dir="rtl">
                 {question?.currentAyah.text}
               </h1>
 
