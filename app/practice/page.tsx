@@ -2,10 +2,10 @@
 
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { 
-  DndContext, 
-  useDraggable, 
-  useDroppable, 
+import {
+  DndContext,
+  useDraggable,
+  useDroppable,
   DragEndEvent,
   DragOverlay,
   defaultDropAnimationSideEffects,
@@ -14,7 +14,9 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
-  DragStartEvent
+  DragStartEvent,
+  closestCenter,
+  CollisionDetection
 } from '@dnd-kit/core';
 import { Question, QuestionOption, ValidationResponse } from '../../types/quran';
 import confetti from 'canvas-confetti';
@@ -123,7 +125,7 @@ function DraggableOption({ option, isSelected, isDisabled, language }: { option:
 export default function PracticePage() {
   return (
     <Suspense fallback={
-       <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground animate-pulse">
+      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground animate-pulse">
         <div className="text-lg tracking-widest uppercase">Loading...</div>
       </div>
     }>
@@ -132,35 +134,54 @@ export default function PracticePage() {
   );
 }
 
-// Drop Zone Component
-function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language }: { selectedOption: QuestionOption | null; isCorrect: boolean | null; isSubmitted: boolean; onReset: () => void; language: 'id' | 'en' }) {
-  const t = uiText[language];
-  const { setNodeRef, isOver } = useDroppable({
-    id: 'answer-zone',
-    disabled: !!selectedOption,
+type DropZoneProps = {
+  selectedOption: QuestionOption | null;
+  isCorrect: boolean | null;
+  isSubmitted: boolean;
+  onReset: () => void;
+  language: 'id' | 'en';
+  isValidating?: boolean;
+};
+
+function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language, isValidating }: DropZoneProps) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: 'drop-zone',
+    disabled: isSubmitted,
   });
+  
+  console.log('DropZone state:', { isOver, isSubmitted, hasSelectedOption: !!selectedOption });
+  
+  const t = uiText[language];
 
   return (
     <div
       ref={setNodeRef}
       onClick={!isSubmitted && selectedOption ? onReset : undefined}
-      className={`w-full min-h-[120px] sm:min-h-[160px] rounded-[2rem] border-2 transition-all duration-300 flex items-center justify-center p-6 relative
-        ${selectedOption 
+      onDragOver={(e) => {
+        e.preventDefault();
+        console.log('Drag over drop zone');
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        console.log('Drop on drop zone');
+      }}
+      className={`w-full min-h-[120px] sm:min-h-[160px] rounded-[2rem] border-2 transition-all duration-300 flex items-center justify-center p-6 relative z-10
+          ${selectedOption
           ? isSubmitted
-            ? isCorrect 
-              ? 'border-emerald-500 bg-emerald-500/10' 
+            ? isCorrect
+              ? 'border-emerald-500 bg-emerald-500/10'
               : 'border-amber-500 bg-amber-500/10'
             : 'border-primary/50 bg-background cursor-pointer hover:bg-muted/5'
-          : isOver 
-            ? 'border-primary border-dashed bg-primary-bg/10 scale-[1.02]' 
+          : isOver
+            ? 'border-primary border-dashed bg-primary/10 scale-[1.02] shadow-lg'
             : 'border-border border-dashed bg-muted/5'
         }
-      `}
+        `}
     >
       {selectedOption ? (
         <div className={`text-center w-full animate-in fade-in zoom-in-95 duration-300`}>
           <p dir="rtl" className={`font-arabic text-xl sm:text-2xl md:text-3xl leading-[2.2] 
-            ${isSubmitted 
+              ${isSubmitted
               ? isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
               : 'text-foreground'
             }`}>
@@ -184,6 +205,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language }:
   );
 }
 
+
 function PracticeContent() {
   const searchParams = useSearchParams();
   const juzParam = searchParams.get('juz');
@@ -200,7 +222,7 @@ function PracticeContent() {
   const [activeDragItem, setActiveDragItem] = useState<QuestionOption | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [streak, setStreak] = useState<number>(0);
-  
+
   // New State for Points/Combo
   const [combo, setCombo] = useState<number>(0);
   const [maxCombo, setMaxCombo] = useState<number>(0);
@@ -217,7 +239,7 @@ function PracticeContent() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const t = uiText[language];
-  
+
   // Persist question limit
   useEffect(() => {
     if (limitParam) {
@@ -243,13 +265,13 @@ function PracticeContent() {
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 10,
+        distance: 5,
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 50,
-        tolerance: 10,
+        delay: 25,
+        tolerance: 5,
       },
     })
   );
@@ -266,7 +288,7 @@ function PracticeContent() {
       const params = new URLSearchParams();
       if (juzParam) params.append('juz', juzParam);
       if (surahParam) params.append('surah', surahParam);
-      
+
       const lang = localStorage.getItem('app-language')?.toLowerCase() || 'id';
       params.append('lang', lang);
 
@@ -278,7 +300,7 @@ function PracticeContent() {
       if (!res.ok) throw new Error('Failed to fetch question');
       const data: Question = await res.json();
       setQuestion(data);
-      
+
       // Reset state
       setSelectedOption(null);
       setFeedback(null);
@@ -310,16 +332,16 @@ function PracticeContent() {
   // Auto-play audio when question loads
   useEffect(() => {
     if (!isStarting && question && audioRef.current) {
-       audioRef.current.load();
-       const playPromise = audioRef.current.play();
-       if (playPromise !== undefined) {
-         playPromise
-           .then(() => setIsPlaying(true))
-           .catch(error => {
-             console.log("Autoplay prevented:", error);
-             setIsPlaying(false);
-           });
-       }
+      audioRef.current.load();
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch(error => {
+            console.log("Autoplay prevented:", error);
+            setIsPlaying(false);
+          });
+      }
     }
   }, [question, isStarting]);
 
@@ -330,13 +352,25 @@ function PracticeContent() {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+    const { active, over, delta, activatorEvent } = event;
     setActiveDragItem(null);
 
-    if (over && over.id === 'answer-zone') {
+    console.log('DragEnd details:', { 
+      active: active.id, 
+      over: over?.id, 
+      dropZone: 'drop-zone',
+      hasOver: !!over,
+      delta,
+      activatorEvent: !!activatorEvent
+    });
+
+    if (over && over.id === 'drop-zone') {
       const option = active.data.current?.option as QuestionOption;
+      console.log('✅ Dropping option:', option);
       setSelectedOption(option);
       validateAnswer(option);
+    } else {
+      console.log('❌ Drop failed - not over drop zone');
     }
   };
 
@@ -361,22 +395,22 @@ function PracticeContent() {
       if (!res.ok) throw new Error('Validation failed');
 
       const data: ValidationResponse = await res.json();
-      
+
       setFeedback(data.isCorrect ? 'correct' : 'incorrect');
       if (data.isCorrect) {
-         setStreak(data.currentCorrectStreak ?? 0);
-         setCombo(data.comboStreak ?? 0);
-         setPointsGained(data.pointsGained ?? 0);
-         setMaxStreak(prev => Math.max(prev, data.currentCorrectStreak ?? 0));
-         setMaxCombo(prev => Math.max(prev, data.comboStreak ?? 0));
-         playSound('correct');
+        setStreak(data.currentCorrectStreak ?? 0);
+        setCombo(data.comboStreak ?? 0);
+        setPointsGained(data.pointsGained ?? 0);
+        setMaxStreak(prev => Math.max(prev, data.currentCorrectStreak ?? 0));
+        setMaxCombo(prev => Math.max(prev, data.comboStreak ?? 0));
+        playSound('correct');
       } else {
-         setStreak(0);
-         setCombo(0);
-         setPointsGained(0);
-         playSound('wrong');
+        setStreak(0);
+        setCombo(0);
+        setPointsGained(0);
+        playSound('wrong');
       }
-      
+
       if (data.totalPoints !== undefined) setTotalPoints(data.totalPoints);
       if (data.remainingQuestions !== undefined) setRemainingQuestions(data.remainingQuestions);
       if (data.sessionFinished) {
@@ -393,10 +427,10 @@ function PracticeContent() {
       if (data.correctAyah) {
         // Map correctAyah to QuestionOption format if needed
         setCorrectAyah({
-           id: data.correctAyah.id,
-           text: data.correctAyah.text,
-           surah: data.correctAyah.surah,
-           ayah: data.correctAyah.ayah
+          id: data.correctAyah.id,
+          text: data.correctAyah.text,
+          surah: data.correctAyah.surah,
+          ayah: data.correctAyah.ayah
         });
       }
       setIsSubmitted(true);
@@ -446,34 +480,34 @@ function PracticeContent() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-start bg-background text-foreground p-6 pt-32 overflow-y-auto">
         <div className="text-center space-y-8 animate-in zoom-in duration-500 max-w-md w-full my-auto">
-            <div className="space-y-2">
-               <div className="text-6xl mb-4 animate-bounce">🎉</div>
-               <h1 className="text-4xl font-bold text-primary">{t.sessionFinished}</h1>
-               <p className="text-muted-foreground">{t.completed} {sessionLimit} {t.questions}.</p>
-            </div>
+          <div className="space-y-2">
+            <div className="text-6xl mb-4 animate-bounce">🎉</div>
+            <h1 className="text-4xl font-bold text-primary">{t.sessionFinished}</h1>
+            <p className="text-muted-foreground">{t.completed} {sessionLimit} {t.questions}.</p>
+          </div>
 
           <div className="p-8 bg-card border border-border rounded-3xl shadow-xl space-y-6">
-             <div className="flex flex-col items-center space-y-2">
-                <span className="text-sm text-muted-foreground uppercase tracking-wider">{t.totalPoints}</span>
-                <span className="text-5xl font-bold text-emerald-500 font-mono">{totalPoints}</span>
-             </div>
-             
-             <div className="w-full h-px bg-border/50" />
-             
-             <div className="grid grid-cols-2 gap-4 text-center">
-                <div className="p-4 rounded-2xl bg-muted/30">
-                   <div className="text-2xl font-bold text-foreground">{maxStreak}</div>
-                   <div className="text-xs text-muted-foreground mt-1">{t.lastStreak}</div>
-                </div>
-                 <div className="p-4 rounded-2xl bg-muted/30">
-                   <div className="text-2xl font-bold text-foreground">{maxCombo}</div>
-                   <div className="text-xs text-muted-foreground mt-1">{t.maxCombo}</div>
-                </div>
-             </div>
+            <div className="flex flex-col items-center space-y-2">
+              <span className="text-sm text-muted-foreground uppercase tracking-wider">{t.totalPoints}</span>
+              <span className="text-5xl font-bold text-emerald-500 font-mono">{totalPoints}</span>
+            </div>
+
+            <div className="w-full h-px bg-border/50" />
+
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div className="p-4 rounded-2xl bg-muted/30">
+                <div className="text-2xl font-bold text-foreground">{maxStreak}</div>
+                <div className="text-xs text-muted-foreground mt-1">{t.lastStreak}</div>
+              </div>
+              <div className="p-4 rounded-2xl bg-muted/30">
+                <div className="text-2xl font-bold text-foreground">{maxCombo}</div>
+                <div className="text-xs text-muted-foreground mt-1">{t.maxCombo}</div>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col gap-3">
-            <button 
+            <button
               onClick={() => {
                 setSessionFinished(false);
                 setCombo(0);
@@ -491,13 +525,13 @@ function PracticeContent() {
             >
               {t.newSession}
             </button>
-            <a 
+            <a
               href="/leaderboard"
               className="w-full py-4 bg-transparent border border-border text-foreground rounded-full text-lg font-medium hover:bg-muted/50 transition-all duration-300"
             >
               {t.leaderboard}
             </a>
-            <a 
+            <a
               href="/"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
             >
@@ -511,30 +545,31 @@ function PracticeContent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-background text-foreground pt-20 pb-4 px-4 sm:p-6 transition-colors duration-500 overflow-x-hidden overflow-y-auto">
-      <DndContext 
-        sensors={sensors} 
-        onDragStart={handleDragStart} 
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
         {isStarting && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm animate-in fade-in duration-300">
-             <div className="flex flex-col items-center justify-center gap-8">
-               <div className="text-8xl sm:text-[10rem] font-bold text-primary animate-bounce font-mono leading-none">
-                  {countdown}
-               </div>
-               <p className="text-muted-foreground animate-pulse text-xl sm:text-2xl tracking-[0.5em] uppercase font-light text-center px-4">Bersiap...</p>
+            <div className="flex flex-col items-center justify-center gap-8">
+              <div className="text-8xl sm:text-[10rem] font-bold text-primary animate-bounce font-mono leading-none">
+                {countdown}
+              </div>
+              <p className="text-muted-foreground animate-pulse text-xl sm:text-2xl tracking-[0.5em] uppercase font-light text-center px-4">Bersiap...</p>
             </div>
           </div>
         )}
 
         <main className="w-full max-w-xl flex flex-col items-center space-y-6 sm:space-y-12 pb-20 px-4 my-auto">
-          
+
           {/* Header / Verse Display */}
           <div className={`text-center space-y-4 sm:space-y-6 w-full transition-opacity duration-500 ${!question ? 'opacity-0' : 'opacity-100'}`}>
             <div className="flex justify-between items-center w-full max-w-xs mx-auto text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/30 px-4 py-2 rounded-full">
-             <span>{t.question} {Math.max(1, (sessionLimit + 1) - remainingQuestions)} / {sessionLimit}</span>
-             <span className="text-primary">{totalPoints} {t.pts}</span>
-          </div>
+              <span>{t.question} {Math.max(1, (sessionLimit + 1) - remainingQuestions)} / {sessionLimit}</span>
+              <span className="text-primary">{totalPoints} {t.pts}</span>
+            </div>
 
             <div className="relative py-2 space-y-4">
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-arabic leading-[1.8] sm:leading-[2.0] md:leading-[2.2] text-foreground text-center px-2" dir="rtl">
@@ -551,11 +586,10 @@ function PracticeContent() {
                 <div className="flex justify-center mt-2">
                   <button
                     onClick={toggleAudio}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-medium whitespace-nowrap leading-none ${
-                      isPlaying 
-                        ? 'bg-red-500 hover:bg-red-600 text-white' 
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-medium whitespace-nowrap leading-none ${isPlaying
+                        ? 'bg-red-500 hover:bg-red-600 text-white'
                         : 'bg-primary hover:bg-primary/10 text-white'
-                    }`}
+                      }`}
                   >
                     <span>{isPlaying ? t.stop : t.play}</span>
                     <span className="text-lg">{isPlaying ? '⏹️' : '▶️'}</span>
@@ -571,7 +605,7 @@ function PracticeContent() {
                 </div>
               )}
             </div>
-            
+
             <p className="text-sm text-muted-foreground/60 font-medium">
               {t.surah} {question?.currentAyah.surahName || question?.currentAyah.surah} • {t.ayah} {question?.currentAyah.ayah}
             </p>
@@ -579,10 +613,10 @@ function PracticeContent() {
 
           {/* Drop Zone */}
           <div className="w-full">
-            <DropZone 
-              selectedOption={selectedOption} 
-              isCorrect={feedback === 'correct'} 
-              isSubmitted={isSubmitted} 
+            <DropZone
+              selectedOption={selectedOption}
+              isCorrect={feedback === 'correct'}
+              isSubmitted={isSubmitted}
               onReset={handleResetSelection}
               language={language}
               isValidating={isValidating}
@@ -593,11 +627,11 @@ function PracticeContent() {
           {!isSubmitted && question && (
             <div className="w-full grid grid-cols-1 gap-3">
               {question.options.map((option) => (
-                <DraggableOption 
-                  key={option.id} 
-                  option={option} 
+                <DraggableOption
+                  key={option.id}
+                  option={option}
                   isSelected={selectedOption?.id === option.id}
-                  isDisabled={!!selectedOption}
+                  isDisabled={selectedOption?.id === option.id}
                   language={language}
                 />
               ))}
@@ -606,43 +640,43 @@ function PracticeContent() {
 
           {/* Actions & Feedback */}
           <div className="w-full min-h-[100px] flex flex-col items-center justify-center space-y-4">
-             {isSubmitted && (
-                <div className="w-full space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
-                  {feedback === 'incorrect' && correctAyah && (
-                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
-                      <p className="text-amber-600 dark:text-amber-400 font-medium">{t.incorrect}</p>
-                      <p className="font-arabic text-xl text-foreground dir-rtl">{correctAyah.text}</p>
-                    </div>
-                  )}
-                  
-                  {feedback === 'correct' && (
-                     <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 duration-500 space-y-4">
-                        <p className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wide text-lg">{t.correct}</p>
-                        
-                        <div className="flex justify-center items-center gap-6">
-                           <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 delay-100">
-                              <span className="text-3xl font-bold text-emerald-500 font-mono">+{pointsGained}</span>
-                              <span className="text-[10px] uppercase tracking-wider text-emerald-600/70 font-bold mt-1">{t.pointsLabel}</span>
-                           </div>
+            {isSubmitted && (
+              <div className="w-full space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
+                {feedback === 'incorrect' && correctAyah && (
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
+                    <p className="text-amber-600 dark:text-amber-400 font-medium">{t.incorrect}</p>
+                    <p className="font-arabic text-xl text-foreground dir-rtl">{correctAyah.text}</p>
+                  </div>
+                )}
 
-                           {combo > 1 && (
-                             <div className={`flex flex-col items-center animate-in fade-in zoom-in delay-200 ${combo >= 3 ? 'scale-110' : ''}`}>
-                                <span className="text-3xl">🔥 x{combo}</span>
-                                <span className="text-[10px] uppercase tracking-wider text-orange-500/70 font-bold mt-1">{t.comboLabel}</span>
-                             </div>
-                           )}
+                {feedback === 'correct' && (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 duration-500 space-y-4">
+                    <p className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wide text-lg">{t.correct}</p>
+
+                    <div className="flex justify-center items-center gap-6">
+                      <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 delay-100">
+                        <span className="text-3xl font-bold text-emerald-500 font-mono">+{pointsGained}</span>
+                        <span className="text-[10px] uppercase tracking-wider text-emerald-600/70 font-bold mt-1">{t.pointsLabel}</span>
+                      </div>
+
+                      {combo > 1 && (
+                        <div className={`flex flex-col items-center animate-in fade-in zoom-in delay-200 ${combo >= 3 ? 'scale-110' : ''}`}>
+                          <span className="text-3xl">🔥 x{combo}</span>
+                          <span className="text-[10px] uppercase tracking-wider text-orange-500/70 font-bold mt-1">{t.comboLabel}</span>
                         </div>
-                     </div>
-                  )}
+                      )}
+                    </div>
+                  </div>
+                )}
 
-                  <button 
-                    onClick={fetchQuestion}
-                    className="w-full py-4 bg-foreground text-background rounded-full text-lg font-medium tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
-                  >
-                    {t.next}
-                  </button>
-                </div>
-             )}
+                <button
+                  onClick={fetchQuestion}
+                  className="w-full py-4 bg-foreground text-background rounded-full text-lg font-medium tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
+                >
+                  {t.next}
+                </button>
+              </div>
+            )}
           </div>
 
         </main>
@@ -650,11 +684,11 @@ function PracticeContent() {
         {/* Drag Overlay for smooth movement */}
         <DragOverlay dropAnimation={dropAnimation}>
           {activeDragItem ? (
-             <div className="w-full p-4 rounded-xl border border-primary/50 bg-background shadow-2xl cursor-grabbing rotate-2 scale-105">
-                <p className="font-arabic text-xl md:text-2xl text-center leading-loose dir-rtl">
-                  {activeDragItem.text}
-                </p>
-             </div>
+            <div className="w-full p-4 rounded-xl border border-primary/50 bg-background shadow-2xl cursor-grabbing rotate-2 scale-105">
+              <p className="font-arabic text-xl md:text-2xl text-center leading-loose dir-rtl">
+                {activeDragItem.text}
+              </p>
+            </div>
           ) : null}
         </DragOverlay>
 
