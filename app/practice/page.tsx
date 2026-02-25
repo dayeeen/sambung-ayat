@@ -15,8 +15,7 @@ import {
   useSensor,
   useSensors,
   DragStartEvent,
-  closestCenter,
-  CollisionDetection
+  closestCenter
 } from '@dnd-kit/core';
 import { Question, QuestionOption, ValidationResponse } from '../../types/quran';
 import confetti from 'canvas-confetti';
@@ -26,7 +25,7 @@ const uiText = {
     loading: 'Memuat Soal...',
     question: 'Pertanyaan',
     pts: 'POIN',
-    checkingAnswer: 'Memeriksa jawaban',
+    tapToRemove: 'Tekan untuk menghapus',
     dragHere: 'Tarik ayat yang benar ke sini',
     play: 'Putar Tilawah',
     stop: 'Hentikan Tilawah',
@@ -53,7 +52,7 @@ const uiText = {
     loading: 'Loading Question...',
     question: 'Question',
     pts: 'PTS',
-    checkingAnswer: 'Checking Answer...',
+    tapToRemove: 'Tap to remove',
     dragHere: 'Drag the correct ayah here',
     play: 'Play Recitation',
     stop: 'Stop Recitation',
@@ -145,11 +144,9 @@ type DropZoneProps = {
 
 function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language, isValidating }: DropZoneProps) {
   const { isOver, setNodeRef } = useDroppable({
-    id: 'drop-zone',
+    id: 'answer-zone',
     disabled: isSubmitted,
   });
-  
-  console.log('DropZone state:', { isOver, isSubmitted, hasSelectedOption: !!selectedOption });
   
   const t = uiText[language];
 
@@ -157,15 +154,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language, i
     <div
       ref={setNodeRef}
       onClick={!isSubmitted && selectedOption ? onReset : undefined}
-      onDragOver={(e) => {
-        e.preventDefault();
-        console.log('Drag over drop zone');
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        console.log('Drop on drop zone');
-      }}
-      className={`w-full min-h-[120px] sm:min-h-[160px] rounded-[2rem] border-2 transition-all duration-300 flex items-center justify-center p-6 relative z-10
+      className={`w-full min-h-[120px] sm:min-h-[160px] rounded-[2rem] border-2 transition-all duration-300 flex items-center justify-center p-6 relative
           ${selectedOption
           ? isSubmitted
             ? isCorrect
@@ -173,7 +162,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language, i
               : 'border-amber-500 bg-amber-500/10'
             : 'border-primary/50 bg-background cursor-pointer hover:bg-muted/5'
           : isOver
-            ? 'border-primary border-dashed bg-primary/10 scale-[1.02] shadow-lg'
+            ? 'border-primary border-dashed bg-primary-bg/10 scale-[1.02]'
             : 'border-border border-dashed bg-muted/5'
         }
         `}
@@ -195,9 +184,6 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language, i
         </div>
       ) : (
         <div className="text-center text-muted-foreground pointer-events-none space-y-2">
-          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-2 text-2xl opacity-50">
-            ✋
-          </div>
           <p className="text-sm font-medium">{t.dragHere}</p>
         </div>
       )}
@@ -240,6 +226,11 @@ function PracticeContent() {
 
   const t = uiText[language];
 
+  const { setNodeRef: setOptionsZoneRef } = useDroppable({
+    id: 'options-zone',
+    disabled: false,
+  });
+
   // Persist question limit
   useEffect(() => {
     if (limitParam) {
@@ -265,13 +256,13 @@ function PracticeContent() {
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 10,
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 25,
-        tolerance: 5,
+        delay: 50,
+        tolerance: 10,
       },
     })
   );
@@ -352,25 +343,15 @@ function PracticeContent() {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over, delta, activatorEvent } = event;
+    const { active, over } = event;
     setActiveDragItem(null);
 
-    console.log('DragEnd details:', { 
-      active: active.id, 
-      over: over?.id, 
-      dropZone: 'drop-zone',
-      hasOver: !!over,
-      delta,
-      activatorEvent: !!activatorEvent
-    });
-
-    if (over && over.id === 'drop-zone') {
-      const option = active.data.current?.option as QuestionOption;
-      console.log('✅ Dropping option:', option);
+    const option = active.data.current?.option as QuestionOption | undefined;
+    if (!option) return;
+    if (over && over.id === 'answer-zone') {
       setSelectedOption(option);
-      validateAnswer(option);
-    } else {
-      console.log('❌ Drop failed - not over drop zone');
+    } else if (over && over.id === 'options-zone') {
+      if (!isSubmitted) setSelectedOption(null);
     }
   };
 
@@ -625,13 +606,13 @@ function PracticeContent() {
 
           {/* Options Grid */}
           {!isSubmitted && question && (
-            <div className="w-full grid grid-cols-1 gap-3">
+            <div ref={setOptionsZoneRef} className="w-full grid grid-cols-1 gap-3">
               {question.options.map((option) => (
                 <DraggableOption
                   key={option.id}
                   option={option}
                   isSelected={selectedOption?.id === option.id}
-                  isDisabled={selectedOption?.id === option.id}
+                  isDisabled={!!selectedOption}
                   language={language}
                 />
               ))}
@@ -640,6 +621,19 @@ function PracticeContent() {
 
           {/* Actions & Feedback */}
           <div className="w-full min-h-[100px] flex flex-col items-center justify-center space-y-4">
+            {!isSubmitted && selectedOption && (
+              <button
+                onClick={() => validateAnswer()}
+                disabled={isValidating}
+                className={`w-full py-4 rounded-full text-lg font-medium tracking-wide transition-all duration-300 ${
+                  isValidating
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                    : 'bg-foreground text-background hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0'
+                }`}
+              >
+                {t.confirm}
+              </button>
+            )}
             {isSubmitted && (
               <div className="w-full space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
                 {feedback === 'incorrect' && correctAyah && (
