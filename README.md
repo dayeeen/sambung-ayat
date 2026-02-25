@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sambung Ayat — Latihan Hafalan Al-Qur'an
 
-## Getting Started
+Aplikasi latihan hafalan Al‑Qur’an berbasis web dengan mekanik “sambung ayat”. Fokus pada pengalaman ibadah: desain minimalis, tanpa distraksi, dengan umpan balik instan dan progress yang tercatat.
 
-First, run the development server:
+## Fitur Utama
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Latihan sambung ayat interaktif (drag and drop ke area jawaban)
+- Umpan balik instan: benar/salah, ayat kelanjutan yang benar, efek konfeti saat sesi selesai
+- Poin, combo, streak, rekap sesi, dan leaderboard 10 besar
+- Tilawah audio per ayat: tombol Play/Stop (ikon dan warna dinamis)
+- Pemilihan mode latihan: satu juz penuh, per surah, atau rentang surah
+- Pengaturan sesi: jumlah soal, konfigurasi juz/surah
+- Bahasa Indonesia dan English
+- Tema terang/gelap
+- Akun pengguna:
+  - Login via Supabase (Google)
+  - Guest mode otomatis; saat login, progress guest digabungkan ke akun
+  - Pengaturan profil: ubah display name, hapus akun (logout otomatis)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Cara Bermain
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Masuk ke Beranda dan pilih Mulai Latihan
+2. Pilih mode (Juz penuh / Per Surah / Rentang) dan jumlah soal
+3. Baca ayat yang ditampilkan di bagian atas
+4. Seret pilihan ayat yang menurut Anda merupakan kelanjutan yang benar ke area “Tarik ayat yang benar ke sini”
+5. Sistem memvalidasi:
+   - Jika benar: poin bertambah, combo/streak dihitung, suara “benar” diputar
+   - Jika salah: combo direset, suara “salah” diputar, ditampilkan ayat yang benar
+6. Putar/hentikan tilawah dengan tombol di bawah ayat:
+   - Normal: tombol hijau
+   - Sedang memutar: tombol merah
+7. Sesi berakhir setelah jumlah soal terpenuhi; Anda akan melihat ringkasan poin, streak, dan combo. Lanjutkan ke sesi baru atau lihat Leaderboard.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Arsitektur Singkat
 
-## Learn More
+- Next.js App Router (16.x) + React 19
+- Tailwind CSS v4 untuk styling
+- DnD Kit untuk drag-and-drop
+- Supabase (SSR + client) untuk autentikasi dan sesi
+- Prisma ORM + PostgreSQL untuk persistensi data
 
-To learn more about Next.js, take a look at the following resources:
+## Model Data (ringkas)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- User: progress agregat (poin, streak, dll.), relasi ke Sessions dan Answers
+- Session: progres per sesi (total pertanyaan, combo, poin, batas pertanyaan)
+- Answer: hasil per soal (benar/salah) dengan timestamp
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Teknologi
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Next.js, React, Tailwind CSS, DnD Kit
+- Supabase (SSR + client)
+- Prisma + PostgreSQL
+- Lucide Icons
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Kontribusi ide dan perbaikan sangat disambut. Semoga aplikasi ini membantu memperkuat hafalan Al‑Qur’an.*** End Patch*** }```
+*** End Patch
