@@ -604,6 +604,21 @@ function PracticeContent() {
             />
           </div>
 
+          {/* Confirm Button - Moved below Drop Zone */}
+          {!isSubmitted && selectedOption && (
+            <button
+              onClick={() => validateAnswer()}
+              disabled={isValidating}
+              className={`w-full py-4 rounded-full text-lg font-medium tracking-wide transition-all duration-300 ${
+                isValidating
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-foreground text-background hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0'
+              }`}
+            >
+              {t.confirm}
+            </button>
+          )}
+
           {/* Options Grid */}
           {!isSubmitted && question && (
             <div ref={setOptionsZoneRef} className="w-full grid grid-cols-1 gap-3">
@@ -621,19 +636,6 @@ function PracticeContent() {
 
           {/* Actions & Feedback */}
           <div className="w-full min-h-[100px] flex flex-col items-center justify-center space-y-4">
-            {!isSubmitted && selectedOption && (
-              <button
-                onClick={() => validateAnswer()}
-                disabled={isValidating}
-                className={`w-full py-4 rounded-full text-lg font-medium tracking-wide transition-all duration-300 ${
-                  isValidating
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'bg-foreground text-background hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0'
-                }`}
-              >
-                {t.confirm}
-              </button>
-            )}
             {isSubmitted && (
               <div className="w-full space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
                 {feedback === 'incorrect' && correctAyah && (
