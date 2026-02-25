@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useRef, useCallback } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   DndContext, 
@@ -17,7 +17,6 @@ import {
   DragStartEvent
 } from '@dnd-kit/core';
 import { Question, QuestionOption, ValidationResponse } from '../../types/quran';
-import confetti from 'canvas-confetti';
 
 const uiText = {
   id: {
@@ -208,6 +207,7 @@ function PracticeContent() {
   const [sessionFinished, setSessionFinished] = useState<boolean>(false);
   const [remainingQuestions, setRemainingQuestions] = useState<number>(sessionLimit);
   const [language, setLanguage] = useState<'id' | 'en'>('id');
+  const [isValidating, setIsValidating] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -227,7 +227,7 @@ function PracticeContent() {
     })
   );
 
-  const fetchQuestion = useCallback(async () => {
+  const fetchQuestion = async () => {
     setIsPlaying(false);
     if (audioRef.current) {
       audioRef.current.pause();
@@ -240,7 +240,7 @@ function PracticeContent() {
       if (juzParam) params.append('juz', juzParam);
       if (surahParam) params.append('surah', surahParam);
       
-      const lang = localStorage.getItem('language') || 'id';
+      const lang = localStorage.getItem('app-language')?.toLowerCase() || 'id';
       params.append('lang', lang);
 
       if (params.toString()) {
@@ -263,40 +263,36 @@ function PracticeContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [juzParam, surahParam]);
+  };
 
   useEffect(() => {
-    // Initial load
-    const storedLang = localStorage.getItem('language') as 'id' | 'en';
-    if (storedLang) setLanguage(storedLang);
-    fetchQuestion();
-
-    // Listen for language changes
-    const handleLanguageChange = () => {
-      const newLang = localStorage.getItem('language') as 'id' | 'en';
-      if (newLang) {
-        setLanguage(newLang);
-        // Re-fetch question to apply new language
-        fetchQuestion();
-      }
+    const updateLang = () => {
+      const storedLang = localStorage.getItem('app-language');
+      if (storedLang) setLanguage(storedLang.toLowerCase() as 'id' | 'en');
     };
 
-    window.addEventListener('language-change', handleLanguageChange);
-    return () => window.removeEventListener('language-change', handleLanguageChange);
-  }, [fetchQuestion]);
+    updateLang();
+    window.addEventListener('language-change', updateLang);
+    return () => window.removeEventListener('language-change', updateLang);
+  }, []);
 
   useEffect(() => {
-    if (question?.currentAyah.audio && audioRef.current) {
-      // Auto-play audio when question changes
-      // We use a small timeout to ensure the audio element is ready and to avoid race conditions
-      const timer = setTimeout(() => {
-        if (audioRef.current) {
-          audioRef.current.play().catch(err => console.log('Auto-play blocked:', err));
-          setIsPlaying(true);
-        }
-      }, 500);
-      
-      return () => clearTimeout(timer);
+    fetchQuestion();
+  }, [juzParam, surahParam]);
+
+  // Auto-play audio when question loads
+  useEffect(() => {
+    if (question && audioRef.current) {
+       audioRef.current.load();
+       const playPromise = audioRef.current.play();
+       if (playPromise !== undefined) {
+         playPromise
+           .then(() => setIsPlaying(true))
+           .catch(error => {
+             console.log("Autoplay prevented:", error);
+             setIsPlaying(false);
+           });
+       }
     }
   }, [question]);
 
@@ -313,14 +309,15 @@ function PracticeContent() {
     if (over && over.id === 'answer-zone') {
       const option = active.data.current?.option as QuestionOption;
       setSelectedOption(option);
-      // Auto submit
-      handleCheck(option);
+      validateAnswer(option);
     }
   };
 
-  const handleCheck = async (selectedOpt: QuestionOption | null = selectedOption) => {
-    if (!selectedOpt || !question) return;
+  const validateAnswer = async (optionToCheck?: QuestionOption) => {
+    const option = optionToCheck || selectedOption;
+    if (!option || !question) return;
 
+    setIsValidating(true);
     try {
       const res = await fetch('/api/validate', {
         method: 'POST',
@@ -328,7 +325,7 @@ function PracticeContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          selectedAyahId: selectedOpt.id,
+          selectedAyahId: option.id,
           currentAyahId: question.currentAyah.id,
           sessionLimit: sessionLimit,
         }),
@@ -343,13 +340,6 @@ function PracticeContent() {
          setStreak(data.currentCorrectStreak ?? 0);
          setCombo(data.comboStreak ?? 0);
          setPointsGained(data.pointsGained ?? 0);
-
-         // Trigger confetti
-         confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 }
-         });
       } else {
          setStreak(0);
          setCombo(0);
@@ -374,6 +364,8 @@ function PracticeContent() {
       setIsSubmitted(true);
     } catch (error) {
       console.error('Validation error:', error);
+    } finally {
+      setIsValidating(false);
     }
   };
 
@@ -535,6 +527,7 @@ function PracticeContent() {
               isSubmitted={isSubmitted} 
               onReset={handleResetSelection}
               language={language}
+              isValidating={isValidating}
             />
           </div>
 
@@ -555,10 +548,7 @@ function PracticeContent() {
 
           {/* Actions & Feedback */}
           <div className="w-full min-h-[100px] flex flex-col items-center justify-center space-y-4">
-             {!isSubmitted ? (
-               // Confirmation button removed for auto-submit
-               null
-             ) : (
+             {isSubmitted && (
                 <div className="w-full space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
                   {feedback === 'incorrect' && correctAyah && (
                     <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">

@@ -94,6 +94,31 @@ body {
 
 /* Custom Utilities for Arabic Typography */
 .font-arabic {
+  font-family: var(--font-arabic), serif;
   line-height: 2.0;
   letter-spacing: 0.02em;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--muted-foreground);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  opacity: 0.5;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--primary);
+}
+
+/* Selection Color */
+::selection {
+  background-color: var(--primary-bg);
+  color: var(--primary);
 }
