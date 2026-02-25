@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ModeToggle } from './mode-toggle'
 import { LanguageSwitcher } from './language-switcher'
+import { Trophy } from 'lucide-react'
 
 export default function Header() {
   const [user, setUser] = useState<any>(null)
@@ -53,14 +54,23 @@ export default function Header() {
         <ModeToggle />
         
         {user ? (
-          <div className="flex gap-2 sm:gap-4 items-center bg-background/80 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-border shadow-sm">
-            <span className="text-sm font-medium hidden sm:inline-block">{user.email?.split('@')[0]}</span>
-            <button 
-                onClick={handleLogout}
-                className="text-xs text-muted-foreground hover:text-red-500 transition-colors uppercase tracking-wider font-medium"
+          <div className="flex items-center gap-2 sm:gap-4">
+             <Link 
+                href="/leaderboard"
+                className="p-2 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+                title="Leaderboard"
             >
-                Logout
-            </button>
+                <Trophy className="w-5 h-5" />
+            </Link>
+            <div className="flex gap-2 sm:gap-4 items-center bg-background/80 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-border shadow-sm">
+                <span className="text-sm font-medium hidden sm:inline-block">{user.email?.split('@')[0]}</span>
+                <button 
+                    onClick={handleLogout}
+                    className="text-xs text-muted-foreground hover:text-red-500 transition-colors uppercase tracking-wider font-medium"
+                >
+                    Logout
+                </button>
+            </div>
           </div>
         ) : (
           <button 
