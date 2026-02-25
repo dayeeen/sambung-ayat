@@ -103,6 +103,60 @@ const Bismillah = () => (
   </div>
 );
 
+const QuestionLimitSlider = ({ 
+  t, 
+  questionLimit, 
+  setQuestionLimit 
+}: { 
+  t: typeof uiText.id, 
+  questionLimit: number, 
+  setQuestionLimit: (limit: number) => void 
+}) => (
+  <div className="space-y-4 py-2">
+      <div className="flex justify-between items-center mb-2">
+          <label className="text-sm font-medium text-muted-foreground">
+              {t.questionCount}
+          </label>
+          <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 min-w-[4rem] text-center">
+              {questionLimit} {t.questions}
+          </span>
+      </div>
+      
+      <div className="flex items-center gap-4">
+          <button 
+              onClick={() => setQuestionLimit(Math.max(1, questionLimit - 1))}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+              aria-label="Decrease question limit"
+          >
+              -
+          </button>
+          <div className="relative w-full h-6 flex items-center select-none touch-none flex-1">
+              <input 
+                  type="range" 
+                  min="1" 
+                  max="20" 
+                  step="1"
+                  value={questionLimit}
+                  onChange={(e) => setQuestionLimit(parseInt(e.target.value))}
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+          </div>
+          <button 
+              onClick={() => setQuestionLimit(Math.min(20, questionLimit + 1))}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+              aria-label="Increase question limit"
+          >
+              +
+          </button>
+      </div>
+      <div className="flex justify-between text-[10px] text-muted-foreground px-1 uppercase tracking-wider font-medium">
+          <span>1</span>
+          <span>10</span>
+          <span>20</span>
+      </div>
+  </div>
+);
+
 export default function Home() {
   const router = useRouter();
   const [language, setLanguage] = useState<'id' | 'en'>('id');
@@ -183,57 +237,6 @@ export default function Home() {
     router.push(url);
   };
 
-  const QuestionLimitSlider = () => (
-    <div className="space-y-4 py-2">
-        <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-medium text-muted-foreground">
-                {t.questionCount}
-            </label>
-            <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 min-w-[4rem] text-center">
-                {questionLimit} {t.questions}
-            </span>
-        </div>
-        
-        <div className="relative w-full h-6 flex items-center select-none touch-none">
-            {/* Hidden Native Input for accessibility and interaction */}
-            <input 
-                type="range" 
-                min="1" 
-                max="20" 
-                step="1"
-                value={questionLimit}
-                onChange={(e) => setQuestionLimit(parseInt(e.target.value))}
-                className="w-full absolute z-20 opacity-0 cursor-pointer h-full inset-0"
-            />
-            
-            {/* Custom Track Background */}
-            <div className="w-full h-2 bg-muted rounded-full overflow-hidden relative z-10">
-                 {/* Fill */}
-                 <div 
-                    className="h-full bg-primary transition-all duration-75 ease-out"
-                    style={{ width: `${((questionLimit - 1) / 19) * 100}%` }}
-                 />
-            </div>
-            
-            {/* Custom Thumb */}
-            <div 
-                className="absolute h-5 w-5 bg-background border-2 border-primary rounded-full shadow-lg shadow-primary/20 z-10 pointer-events-none transition-all duration-75 ease-out flex items-center justify-center"
-                style={{ left: `calc(${((questionLimit - 1) / 19) * 100}% - 10px)` }}
-            >
-                <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-            </div>
-        </div>
-
-        <div className="flex justify-between text-[10px] text-muted-foreground/60 px-1 font-mono uppercase tracking-wider">
-            <span>1</span>
-            <span>5</span>
-            <span>10</span>
-            <span>15</span>
-            <span>20</span>
-        </div>
-    </div>
-  );
-
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-hidden overflow-y-auto relative">
       <IslamicPattern />
@@ -304,7 +307,7 @@ export default function Home() {
                     </div>
                     
                     <div className="space-y-8">
-                        <QuestionLimitSlider />
+                        <QuestionLimitSlider t={t} questionLimit={questionLimit} setQuestionLimit={setQuestionLimit} />
                         
                         <button
                             onClick={handleStartPractice}
@@ -341,7 +344,7 @@ export default function Home() {
                                     className="aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl bg-background border border-border hover:border-primary hover:bg-primary/5 hover:scale-110 active:scale-95 transition-all duration-300 group shadow-sm hover:shadow-md relative overflow-hidden"
                                 >
                                     <div className="absolute inset-0 border-2 border-primary/0 group-hover:border-primary/10 rounded-2xl transition-all duration-300"></div>
-                                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-primary/70 font-medium">{t.juz}</span>
+                                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-primary/70 font-medium hidden sm:block">{t.juz}</span>
                                     <span className="text-2xl font-bold font-serif text-foreground group-hover:text-primary">{juz}</span>
                                 </button>
                             ))}
@@ -478,7 +481,7 @@ export default function Home() {
 
                                 {((mode === 'all') || (mode === 'single' && selectedSurah !== 'all') || (mode === 'range' && rangeStart && rangeEnd)) && (
                                     <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-                                        <QuestionLimitSlider />
+                                        <QuestionLimitSlider t={t} questionLimit={questionLimit} setQuestionLimit={setQuestionLimit} />
                                     </div>
                                 )}
 

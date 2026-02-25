@@ -9,10 +9,10 @@
   --muted: #E7E5E4; /* Stone 200 */
   --muted-foreground: #78716C; /* Stone 500 */
   
-  /* Primary Action / Success (Muted Green) */
-  --primary: #059669; /* Emerald 600 */
+  /* Primary Action / Success (Standard Green) */
+  --primary: #15803d; /* Green 700 */
   --primary-foreground: #FFFFFF;
-  --primary-bg: #D1FAE5; /* Emerald 100 */
+  --primary-bg: #DCFCE7; /* Green 100 */
   
   /* Feedback / Warning (Neutral Amber) */
   --warning: #D97706; /* Amber 600 */
@@ -72,9 +72,9 @@
   --muted: #292524; /* Stone 800 */
   --muted-foreground: #A8A29E; /* Stone 400 */
   
-  --primary: #10B981; /* Emerald 500 */
-  --primary-foreground: #022C22; /* Emerald 950 */
-  --primary-bg: #064E3B; /* Emerald 900 */
+  --primary: #16A34A; /* Green 600 */
+  --primary-foreground: #FFFFFF;
+  --primary-bg: #14532D; /* Green 900 */
   
   --warning: #F59E0B; /* Amber 500 */
   --warning-bg: #451A03; /* Amber 950 (adjusted for contrast) */

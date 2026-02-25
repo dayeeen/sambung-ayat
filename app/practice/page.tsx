@@ -17,6 +17,7 @@ import {
   DragStartEvent
 } from '@dnd-kit/core';
 import { Question, QuestionOption, ValidationResponse } from '../../types/quran';
+import confetti from 'canvas-confetti';
 
 const uiText = {
   id: {
@@ -381,6 +382,12 @@ function PracticeContent() {
       if (data.sessionFinished) {
         setSessionFinished(true);
         playSound('completed');
+        confetti({
+          zIndex: 9999,
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
       }
 
       if (data.correctAyah) {
@@ -437,7 +444,7 @@ function PracticeContent() {
 
   if (sessionFinished) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-6 overflow-y-auto">
+      <div className="min-h-screen flex flex-col items-center justify-start bg-background text-foreground p-6 pt-32 overflow-y-auto">
         <div className="text-center space-y-8 animate-in zoom-in duration-500 max-w-md w-full my-auto">
             <div className="space-y-2">
                <div className="text-6xl mb-4 animate-bounce">🎉</div>
