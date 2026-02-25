@@ -6,10 +6,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ModeToggle } from './mode-toggle'
 import { LanguageSwitcher } from './language-switcher'
-import { Trophy } from 'lucide-react'
+import { Trophy, User } from 'lucide-react'
+import UserSettings from './UserSettings'
 
 export default function Header() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ email?: string } | null>(null)
+  const [showSettings, setShowSettings] = useState(false)
   const supabase = createClient()
   const router = useRouter()
 
@@ -62,6 +64,13 @@ export default function Header() {
             >
                 <Trophy className="w-5 h-5" />
             </Link>
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-2 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+              title="Profil"
+            >
+              <User className="w-5 h-5" />
+            </button>
             <div className="flex gap-2 sm:gap-4 items-center bg-background/80 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-border shadow-sm">
                 <span className="text-sm font-medium hidden sm:inline-block">{user.email?.split('@')[0]}</span>
                 <button 
@@ -81,6 +90,14 @@ export default function Header() {
           </button>
         )}
       </div>
+
+      {/* User Settings Modal */}
+      {showSettings && user && (
+        <UserSettings 
+          user={user} 
+          onClose={() => setShowSettings(false)} 
+        />
+      )}
     </header>
   )
 }
