@@ -23,6 +23,9 @@ const amiri = Amiri({
 export const metadata: Metadata = {
   title: "Sambung Ayat",
   description: "Practice your Qur'an memorization",
+  icons: {
+    icon: "/logo.png",
+  },
 };
 
 export default function RootLayout({
