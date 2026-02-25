@@ -24,7 +24,7 @@ const uiText = {
     loading: 'Memuat Soal...',
     question: 'Pertanyaan',
     pts: 'POIN',
-    tapToRemove: 'Ketuk untuk menghapus',
+    checkingAnswer: 'Memeriksa jawaban',
     dragHere: 'Tarik ayat yang benar ke sini',
     play: 'Putar Tilawah',
     stop: 'Hentikan Tilawah',
@@ -51,7 +51,7 @@ const uiText = {
     loading: 'Loading Question...',
     question: 'Question',
     pts: 'PTS',
-    tapToRemove: 'Tap to remove',
+    checkingAnswer: 'Checking Answer...',
     dragHere: 'Drag the correct ayah here',
     play: 'Play Recitation',
     stop: 'Stop Recitation',
@@ -168,7 +168,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language }:
           </p>
           {!isSubmitted && (
             <p className="text-xs text-muted-foreground mt-4 uppercase tracking-wider">
-              {t.tapToRemove}
+              {t.checkingAnswer}
             </p>
           )}
         </div>
@@ -551,7 +551,11 @@ function PracticeContent() {
                 <div className="flex justify-center mt-2">
                   <button
                     onClick={toggleAudio}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors text-sm font-medium"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-medium whitespace-nowrap leading-none ${
+                      isPlaying 
+                        ? 'bg-red-500 hover:bg-red-600 text-white' 
+                        : 'bg-primary hover:bg-primary/10 text-white'
+                    }`}
                   >
                     <span>{isPlaying ? t.stop : t.play}</span>
                     <span className="text-lg">{isPlaying ? '⏹️' : '▶️'}</span>

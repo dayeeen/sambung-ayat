@@ -18,7 +18,7 @@ export default function UserSettings({ user, onClose }: UserSettingsProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const router = useRouter();
-  createClient();
+  const supabase = createClient();
 
   useEffect(() => {
     const run = async () => {
@@ -96,6 +96,8 @@ export default function UserSettings({ user, onClose }: UserSettingsProps) {
         throw new Error(error.error || 'Gagal menghapus akun');
       }
 
+      // Ensure client-side logout too (clears localStorage/session)
+      await supabase.auth.signOut();
       // Redirect to home page after successful deletion
       router.push('/');
       router.refresh();

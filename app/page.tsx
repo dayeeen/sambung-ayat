@@ -279,7 +279,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-in fade-in zoom-in duration-500 w-full max-w-md mx-auto">
                 <button
                   onClick={() => setShowSettings(true)}
-                  className="group relative w-full sm:flex-1 inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-primary text-primary-foreground rounded-full text-base sm:text-lg font-medium tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                  className="group relative w-full sm:flex-1 inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-primary text-primary-foreground rounded-full text-base sm:text-lg font-medium tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden whitespace-nowrap leading-none"
                 >
                   <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
                   <span className="relative">{t.startPractice}</span>
