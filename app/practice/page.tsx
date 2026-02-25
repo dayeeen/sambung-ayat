@@ -208,10 +208,27 @@ function PracticeContent() {
   const [remainingQuestions, setRemainingQuestions] = useState<number>(sessionLimit);
   const [language, setLanguage] = useState<'id' | 'en'>('id');
   const [isValidating, setIsValidating] = useState(false);
+  const [countdown, setCountdown] = useState(3);
+  const [isStarting, setIsStarting] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const t = uiText[language];
+
+  const playSound = (type: 'correct' | 'wrong' | 'completed') => {
+    const audio = new Audio(`/sfx/${type === 'correct' ? 'correct-answer' : type === 'wrong' ? 'wrong-answer' : 'completed'}.mp3`);
+    audio.volume = 0.5;
+    audio.play().catch(e => console.log('Audio play failed', e));
+  };
+
+  useEffect(() => {
+    if (isStarting && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (isStarting && countdown === 0) {
+      setIsStarting(false);
+    }
+  }, [countdown, isStarting]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -282,7 +299,7 @@ function PracticeContent() {
 
   // Auto-play audio when question loads
   useEffect(() => {
-    if (question && audioRef.current) {
+    if (!isStarting && question && audioRef.current) {
        audioRef.current.load();
        const playPromise = audioRef.current.play();
        if (playPromise !== undefined) {
@@ -294,7 +311,7 @@ function PracticeContent() {
            });
        }
     }
-  }, [question]);
+  }, [question, isStarting]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -340,16 +357,19 @@ function PracticeContent() {
          setStreak(data.currentCorrectStreak ?? 0);
          setCombo(data.comboStreak ?? 0);
          setPointsGained(data.pointsGained ?? 0);
+         playSound('correct');
       } else {
          setStreak(0);
          setCombo(0);
          setPointsGained(0);
+         playSound('wrong');
       }
       
       if (data.totalPoints !== undefined) setTotalPoints(data.totalPoints);
       if (data.remainingQuestions !== undefined) setRemainingQuestions(data.remainingQuestions);
       if (data.sessionFinished) {
         setSessionFinished(true);
+        playSound('completed');
       }
 
       if (data.correctAyah) {
@@ -442,6 +462,8 @@ function PracticeContent() {
                 setPointsGained(0);
                 setTotalPoints(0);
                 setRemainingQuestions(sessionLimit);
+                setCountdown(3);
+                setIsStarting(true);
                 fetchQuestion();
               }}
               className="w-full py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
@@ -473,6 +495,17 @@ function PracticeContent() {
         onDragStart={handleDragStart} 
         onDragEnd={handleDragEnd}
       >
+        {isStarting && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm animate-in fade-in duration-300">
+             <div className="flex flex-col items-center justify-center gap-8">
+               <div className="text-[10rem] font-bold text-primary animate-bounce font-mono leading-none">
+                  {countdown}
+               </div>
+               <p className="text-muted-foreground animate-pulse text-2xl tracking-[0.5em] uppercase font-light">Bersiap...</p>
+            </div>
+          </div>
+        )}
+
         <main className="w-full max-w-xl flex flex-col items-center space-y-8 md:space-y-12 pb-20">
           
           {/* Header / Verse Display */}

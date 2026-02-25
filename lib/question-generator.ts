@@ -142,7 +142,7 @@ export async function generateQuestion(juz?: number, surah?: string, lang: 'id' 
       id: currentAyah.number,
       text: currentAyah.text,
       surah: currentAyah.surah.number,
-      surahName: currentAyah.surah.name,
+      surahName: currentAyah.surah.englishName,
       surahEnglishName: currentAyah.surah.englishName,
       ayah: currentAyah.numberInSurah,
       audio,

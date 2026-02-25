@@ -168,28 +168,52 @@ export default function Home() {
   };
 
   const QuestionLimitSlider = () => (
-    <div className="space-y-3">
-        <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-muted-foreground">
-            {t.questionCount}
-        </label>
-        <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-            {questionLimit} {t.questions}
-        </span>
+    <div className="space-y-4 py-2">
+        <div className="flex justify-between items-center mb-2">
+            <label className="text-sm font-medium text-muted-foreground">
+                {t.questionCount}
+            </label>
+            <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 min-w-[4rem] text-center">
+                {questionLimit} {t.questions}
+            </span>
         </div>
-        <input 
-        type="range" 
-        min="1" 
-        max="20" 
-        step="1"
-        value={questionLimit}
-        onChange={(e) => setQuestionLimit(parseInt(e.target.value))}
-        className="w-full accent-primary h-2 bg-muted rounded-lg appearance-none cursor-pointer hover:bg-muted/80 transition-colors"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground px-1 font-mono">
-        <span>1</span>
-        <span>10</span>
-        <span>20</span>
+        
+        <div className="relative w-full h-6 flex items-center select-none touch-none">
+            {/* Hidden Native Input for accessibility and interaction */}
+            <input 
+                type="range" 
+                min="1" 
+                max="20" 
+                step="1"
+                value={questionLimit}
+                onChange={(e) => setQuestionLimit(parseInt(e.target.value))}
+                className="w-full absolute z-20 opacity-0 cursor-pointer h-full inset-0"
+            />
+            
+            {/* Custom Track Background */}
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden relative z-10">
+                 {/* Fill */}
+                 <div 
+                    className="h-full bg-primary transition-all duration-75 ease-out"
+                    style={{ width: `${((questionLimit - 1) / 19) * 100}%` }}
+                 />
+            </div>
+            
+            {/* Custom Thumb */}
+            <div 
+                className="absolute h-5 w-5 bg-background border-2 border-primary rounded-full shadow-lg shadow-primary/20 z-10 pointer-events-none transition-all duration-75 ease-out flex items-center justify-center"
+                style={{ left: `calc(${((questionLimit - 1) / 19) * 100}% - 10px)` }}
+            >
+                <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+            </div>
+        </div>
+
+        <div className="flex justify-between text-[10px] text-muted-foreground/60 px-1 font-mono uppercase tracking-wider">
+            <span>1</span>
+            <span>5</span>
+            <span>10</span>
+            <span>15</span>
+            <span>20</span>
         </div>
     </div>
   );
