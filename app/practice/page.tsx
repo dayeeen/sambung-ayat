@@ -178,7 +178,7 @@ function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language, i
           </p>
           {!isSubmitted && (
             <p className="text-xs text-muted-foreground mt-4 uppercase tracking-wider">
-              {t.checkingAnswer}
+              {t.tapToRemove}
             </p>
           )}
         </div>
