@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { createClient } from '../../lib/supabase/client';
 
 interface LeaderboardUser {
   id: string;
@@ -16,6 +17,16 @@ export default function LeaderboardPage() {
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'daily' | 'correct' | 'points'>('points');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+      setCheckingSession(false);
+    });
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -45,6 +56,12 @@ export default function LeaderboardPage() {
           <p className="text-muted-foreground">
             Istiqomah dalam mempelajari Al-Qur'an
           </p>
+          
+          {!checkingSession && !isLoggedIn && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center text-sm text-amber-600 dark:text-amber-400 animate-in fade-in slide-in-from-top-2">
+               ⚠️ Antum belum login. Hasil latihan antum tidak akan tersimpan di leaderboard.
+            </div>
+          )}
 
           {/* Tabs */}
           <div className="flex justify-center mt-6">
@@ -159,8 +176,8 @@ export default function LeaderboardPage() {
         </div>
 
         <div className="text-center">
-           <Link href="/practice" className="text-primary hover:underline text-sm">
-              ← Kembali ke Latihan
+           <Link href="/" className="text-primary hover:underline text-sm">
+              ← Kembali ke Menu Utama
            </Link>
         </div>
 

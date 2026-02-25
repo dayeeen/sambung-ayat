@@ -202,6 +202,8 @@ function PracticeContent() {
   
   // New State for Points/Combo
   const [combo, setCombo] = useState<number>(0);
+  const [maxCombo, setMaxCombo] = useState<number>(0);
+  const [maxStreak, setMaxStreak] = useState<number>(0);
   const [pointsGained, setPointsGained] = useState<number>(0);
   const [totalPoints, setTotalPoints] = useState<number>(0);
   const [sessionFinished, setSessionFinished] = useState<boolean>(false);
@@ -214,6 +216,13 @@ function PracticeContent() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const t = uiText[language];
+  
+  // Persist question limit
+  useEffect(() => {
+    if (limitParam) {
+      localStorage.setItem('questionLimit', limitParam);
+    }
+  }, [limitParam]);
 
   const playSound = (type: 'correct' | 'wrong' | 'completed') => {
     const audio = new Audio(`/sfx/${type === 'correct' ? 'correct-answer' : type === 'wrong' ? 'wrong-answer' : 'completed'}.mp3`);
@@ -357,6 +366,8 @@ function PracticeContent() {
          setStreak(data.currentCorrectStreak ?? 0);
          setCombo(data.comboStreak ?? 0);
          setPointsGained(data.pointsGained ?? 0);
+         setMaxStreak(prev => Math.max(prev, data.currentCorrectStreak ?? 0));
+         setMaxCombo(prev => Math.max(prev, data.comboStreak ?? 0));
          playSound('correct');
       } else {
          setStreak(0);
@@ -444,11 +455,11 @@ function PracticeContent() {
              
              <div className="grid grid-cols-2 gap-4 text-center">
                 <div className="p-4 rounded-2xl bg-muted/30">
-                   <div className="text-2xl font-bold text-foreground">{streak}</div>
+                   <div className="text-2xl font-bold text-foreground">{maxStreak}</div>
                    <div className="text-xs text-muted-foreground mt-1">{t.lastStreak}</div>
                 </div>
                  <div className="p-4 rounded-2xl bg-muted/30">
-                   <div className="text-2xl font-bold text-foreground">{combo}</div>
+                   <div className="text-2xl font-bold text-foreground">{maxCombo}</div>
                    <div className="text-xs text-muted-foreground mt-1">{t.maxCombo}</div>
                 </div>
              </div>
@@ -459,6 +470,9 @@ function PracticeContent() {
               onClick={() => {
                 setSessionFinished(false);
                 setCombo(0);
+                setMaxCombo(0);
+                setStreak(0);
+                setMaxStreak(0);
                 setPointsGained(0);
                 setTotalPoints(0);
                 setRemainingQuestions(sessionLimit);

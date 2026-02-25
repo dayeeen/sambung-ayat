@@ -116,6 +116,7 @@ export default function Home() {
   const [rangeEnd, setRangeEnd] = useState<string>('');
   const [mode, setMode] = useState<'all' | 'single' | 'range'>('all');
   const [questionLimit, setQuestionLimit] = useState<number>(10);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const t = uiText[language];
 
@@ -129,6 +130,21 @@ export default function Home() {
     window.addEventListener('language-change', updateLang);
     return () => window.removeEventListener('language-change', updateLang);
   }, []);
+
+  // Persist question limit
+  useEffect(() => {
+    const storedLimit = localStorage.getItem('questionLimit');
+    if (storedLimit) {
+      setQuestionLimit(parseInt(storedLimit));
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('questionLimit', questionLimit.toString());
+    }
+  }, [questionLimit, isLoaded]);
 
   useEffect(() => {
     if (selectedJuz) {
