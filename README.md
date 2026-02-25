@@ -53,5 +53,4 @@ Aplikasi latihan hafalan Al‑Qur’an berbasis web dengan mekanik “sambung ay
 - Prisma + PostgreSQL
 - Lucide Icons
 
-Kontribusi ide dan perbaikan sangat disambut. Semoga aplikasi ini membantu memperkuat hafalan Al‑Qur’an.*** End Patch*** }```
-*** End Patch
+Kontribusi ide dan perbaikan sangat disambut. Semoga aplikasi ini membantu memperkuat hafalan Al‑Qur’an.

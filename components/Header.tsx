@@ -47,7 +47,7 @@ export default function Header() {
     <header className="absolute top-0 w-full flex justify-between items-center p-4 sm:p-6 z-50 pointer-events-none">
       <div className="pointer-events-auto">
         <Link href="/" className="text-lg sm:text-2xl font-bold tracking-tight hover:opacity-80 transition-opacity font-arabic">
-            Sambung <span className="text-primary font-serif italic">Ayat</span>
+            Sa<span className="text-primary font-serif">Ayat</span>
         </Link>
       </div>
       
