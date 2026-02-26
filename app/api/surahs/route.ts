@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         if (!surahMap.has(ayah.surah.number)) {
             surahMap.set(ayah.surah.number, {
                 id: ayah.surah.number,
-                name: ayah.surah.englishName,
+                name: ayah.surah.name,
                 englishName: ayah.surah.englishName
             });
         }
