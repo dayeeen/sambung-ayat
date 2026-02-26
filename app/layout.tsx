@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Amiri } from "next/font/google";
 import Header from "@/components/Header";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
 const geistSans = Geist({
@@ -48,6 +49,7 @@ export default function RootLayout({
           <Header />
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
