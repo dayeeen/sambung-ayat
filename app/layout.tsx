@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   title: "Sambung Ayat",
   description: "Practice your Qur'an memorization",
   icons: {
-    icon: "/logo.png",
+    icon: "/logo_saayat.png",
   },
 };
 
