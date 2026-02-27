@@ -33,10 +33,12 @@ const uiText = {
     correct: 'MasyaAllah, benar!',
     incorrect: 'Lanjutan yang benar adalah:',
     next: 'Ayat Berikutnya →',
+    finish: 'Selesai',
     sessionFinished: 'Sesi Selesai!',
     completed: 'Alhamdulillah, antum telah menyelesaikan',
     questions: 'soal',
     totalPoints: 'Total Poin',
+    correctAnswers: 'Jawaban Benar',
     lastStreak: 'Streak Terakhir',
     maxCombo: 'Max Combo',
     newSession: 'Mulai Sesi Baru',
@@ -60,10 +62,12 @@ const uiText = {
     correct: 'MashaAllah, Correct!',
     incorrect: 'The correct continuation is:',
     next: 'Next Verse →',
+    finish: 'Finish',
     sessionFinished: 'Session Finished!',
     completed: 'Alhamdulillah, you have completed',
     questions: 'questions',
     totalPoints: 'Total Points',
+    correctAnswers: 'Correct Answers',
     lastStreak: 'Last Streak',
     maxCombo: 'Max Combo',
     newSession: 'Start New Session',
@@ -217,6 +221,7 @@ function PracticeContent() {
   const [totalPoints, setTotalPoints] = useState<number>(0);
   const [sessionFinished, setSessionFinished] = useState<boolean>(false);
   const [remainingQuestions, setRemainingQuestions] = useState<number>(sessionLimit);
+  const [correctCount, setCorrectCount] = useState<number>(0);
   const [language, setLanguage] = useState<'id' | 'en'>('id');
   const [isValidating, setIsValidating] = useState(false);
   const [countdown, setCountdown] = useState(3);
@@ -379,6 +384,7 @@ function PracticeContent() {
 
       setFeedback(data.isCorrect ? 'correct' : 'incorrect');
       if (data.isCorrect) {
+        setCorrectCount(prev => prev + 1);
         setStreak(data.currentCorrectStreak ?? 0);
         setCombo(data.comboStreak ?? 0);
         setPointsGained(data.pointsGained ?? 0);
@@ -394,16 +400,7 @@ function PracticeContent() {
 
       if (data.totalPoints !== undefined) setTotalPoints(data.totalPoints);
       if (data.remainingQuestions !== undefined) setRemainingQuestions(data.remainingQuestions);
-      if (data.sessionFinished) {
-        setSessionFinished(true);
-        playSound('completed');
-        confetti({
-          zIndex: 9999,
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-      }
+      // Do not finish session immediately; show feedback first
 
       if (data.correctAyah) {
         // Map correctAyah to QuestionOption format if needed
@@ -485,6 +482,10 @@ function PracticeContent() {
                 <div className="text-xs text-muted-foreground mt-1">{t.maxCombo}</div>
               </div>
             </div>
+            <div className="p-4 rounded-2xl bg-muted/30 text-center">
+              <div className="text-2xl font-bold text-foreground">{correctCount}</div>
+              <div className="text-xs text-muted-foreground mt-1">{t.correctAnswers}</div>
+            </div>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -497,6 +498,7 @@ function PracticeContent() {
                 setMaxStreak(0);
                 setPointsGained(0);
                 setTotalPoints(0);
+                setCorrectCount(0);
                 setRemainingQuestions(sessionLimit);
                 setCountdown(3);
                 setIsStarting(true);
@@ -666,10 +668,23 @@ function PracticeContent() {
                 )}
 
                 <button
-                  onClick={fetchQuestion}
+                  onClick={() => {
+                    if (remainingQuestions <= 0) {
+                      setSessionFinished(true);
+                      playSound('completed');
+                      confetti({
+                        zIndex: 9999,
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                      });
+                    } else {
+                      fetchQuestion();
+                    }
+                  }}
                   className="w-full py-4 bg-foreground text-background rounded-full text-lg font-medium tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
                 >
-                  {t.next}
+                  {remainingQuestions <= 0 ? t.finish : t.next}
                 </button>
               </div>
             )}
