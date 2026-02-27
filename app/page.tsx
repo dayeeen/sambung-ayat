@@ -42,7 +42,8 @@ const uiText = {
     feature3Title: 'Fokus Ibadah',
     feature3Desc: 'Tanpa iklan, desain minimalis. Hanya antum dan Al-Qur\'an.',
     footer: 'Dibuat dengan niat tulus.',
-    beta: 'Rilis Beta'
+    beta: 'Rilis Beta',
+    ver: 'Versi 1.0.0'
   },
   en: {
     title: 'Connect',
@@ -76,7 +77,8 @@ const uiText = {
     feature3Title: 'Focus on Worship',
     feature3Desc: 'No ads, minimalist design. Just you and the Qur\'an.',
     footer: 'Made with sincere intentions.',
-    beta: 'Beta Release'
+    beta: 'Beta Release',
+    ver: 'Version 1.0.0'
   }
 };
 
@@ -86,9 +88,9 @@ const IslamicPattern = () => (
     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="islamic-pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M0 20 L20 0 L40 20 L20 40 Z" fill="none" stroke="currentColor" strokeWidth="0.5"/>
-          <circle cx="20" cy="20" r="8" fill="none" stroke="currentColor" strokeWidth="0.5"/>
-          <path d="M20 0 L20 40 M0 20 L40 20" stroke="currentColor" strokeWidth="0.5"/>
+          <path d="M0 20 L20 0 L40 20 L20 40 Z" fill="none" stroke="currentColor" strokeWidth="0.5" />
+          <circle cx="20" cy="20" r="8" fill="none" stroke="currentColor" strokeWidth="0.5" />
+          <path d="M20 0 L20 40 M0 20 L40 20" stroke="currentColor" strokeWidth="0.5" />
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#islamic-pattern)" />
@@ -103,57 +105,57 @@ const Bismillah = () => (
   </div>
 );
 
-const QuestionLimitSlider = ({ 
-  t, 
-  questionLimit, 
-  setQuestionLimit 
-}: { 
-  t: typeof uiText.id, 
-  questionLimit: number, 
-  setQuestionLimit: (limit: number) => void 
+const QuestionLimitSlider = ({
+  t,
+  questionLimit,
+  setQuestionLimit
+}: {
+  t: typeof uiText.id,
+  questionLimit: number,
+  setQuestionLimit: (limit: number) => void
 }) => (
   <div className="space-y-4 py-2">
-      <div className="flex justify-between items-center mb-2">
-          <label className="text-sm font-medium text-muted-foreground">
-              {t.questionCount}
-          </label>
-          <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 min-w-[4rem] text-center">
-              {questionLimit} {t.questions}
-          </span>
+    <div className="flex justify-between items-center mb-2">
+      <label className="text-sm font-medium text-muted-foreground">
+        {t.questionCount}
+      </label>
+      <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 min-w-[4rem] text-center">
+        {questionLimit} {t.questions}
+      </span>
+    </div>
+
+    <div className="flex items-center gap-4">
+      <button
+        onClick={() => setQuestionLimit(Math.max(1, questionLimit - 1))}
+        className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+        aria-label="Decrease question limit"
+      >
+        -
+      </button>
+      <div className="relative w-full h-6 flex items-center select-none touch-none flex-1">
+        <input
+          type="range"
+          min="1"
+          max="20"
+          step="1"
+          value={questionLimit}
+          onChange={(e) => setQuestionLimit(parseInt(e.target.value))}
+          className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+        />
       </div>
-      
-      <div className="flex items-center gap-4">
-          <button 
-              onClick={() => setQuestionLimit(Math.max(1, questionLimit - 1))}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              aria-label="Decrease question limit"
-          >
-              -
-          </button>
-          <div className="relative w-full h-6 flex items-center select-none touch-none flex-1">
-              <input 
-                  type="range" 
-                  min="1" 
-                  max="20" 
-                  step="1"
-                  value={questionLimit}
-                  onChange={(e) => setQuestionLimit(parseInt(e.target.value))}
-                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-              />
-          </div>
-          <button 
-              onClick={() => setQuestionLimit(Math.min(20, questionLimit + 1))}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              aria-label="Increase question limit"
-          >
-              +
-          </button>
-      </div>
-      <div className="flex justify-between text-[10px] text-muted-foreground px-1 uppercase tracking-wider font-medium">
-          <span>1</span>
-          <span>10</span>
-          <span>20</span>
-      </div>
+      <button
+        onClick={() => setQuestionLimit(Math.min(20, questionLimit + 1))}
+        className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+        aria-label="Increase question limit"
+      >
+        +
+      </button>
+    </div>
+    <div className="flex justify-between text-[10px] text-muted-foreground px-1 uppercase tracking-wider font-medium">
+      <span>1</span>
+      <span>10</span>
+      <span>20</span>
+    </div>
   </div>
 );
 
@@ -231,7 +233,7 @@ export default function Home() {
     } else if (mode === 'range' && rangeStart && rangeEnd) {
       url += `&surah=${rangeStart}-${rangeEnd}`;
     }
-    
+
     url += `&limit=${questionLimit}`;
 
     router.push(url);
@@ -240,21 +242,21 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-hidden overflow-y-auto relative">
       <IslamicPattern />
-      
+
       <main className="flex-1 flex flex-col items-center justify-center p-4 pt-24 pb-12 sm:p-20 text-center relative z-10 w-full min-h-full">
         <div className="max-w-4xl w-full space-y-8 sm:space-y-12 animate-fade-in flex flex-col items-center my-auto">
-          
+
           {/* Hero Section */}
           <div className="space-y-6 sm:space-y-8 max-w-3xl relative w-full px-4 sm:px-0">
             {/* Decorative Element Top */}
             <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-48 sm:h-64 bg-primary/5 rounded-full blur-3xl -z-10" />
 
             <Bismillah />
-            
+
             <div className="space-y-2">
-                <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-xs sm:text-sm font-medium tracking-wide mb-4">
-                    ✨ {t.beta}
-                </div>
+              <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-xs sm:text-sm font-medium tracking-wide mb-4">
+                ✨ {t.ver}
+              </div>
               <h1 className="text-4xl sm:text-7xl font-bold tracking-tight text-foreground font-arabic leading-tight">
                 {t.title} <span className="text-primary font-serif italic relative inline-block">
                   Ayat
@@ -265,10 +267,10 @@ export default function Home() {
                 {t.subtitle}
               </p>
             </div>
-            
+
             <p className="text-base sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed font-serif px-2">
               {t.verse}
-              <br/>
+              <br />
               <span className="text-xs sm:text-sm italic mt-2 block opacity-70">(QS. Al-Qamar: 17)</span>
             </p>
           </div>
@@ -285,7 +287,7 @@ export default function Home() {
                   <span className="relative">{t.startPractice}</span>
                   <span className="relative opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300">→</span>
                 </button>
-                
+
                 <button
                   onClick={() => setShowJuzSelection(true)}
                   className="w-full sm:flex-1 px-6 sm:px-8 py-3 sm:py-4 bg-background border border-border text-muted-foreground hover:text-primary hover:border-primary/30 rounded-full text-base sm:text-lg font-medium transition-all duration-300 hover:bg-primary/5"
@@ -294,212 +296,212 @@ export default function Home() {
                 </button>
               </div>
             ) : showSettings ? (
-                // Settings Modal / Card
-                <div className="w-full max-w-lg mx-auto bg-card/80 backdrop-blur-md border border-border rounded-3xl p-6 sm:p-10 shadow-xl shadow-primary/5 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-xl font-serif text-foreground">{t.settings}</h3>
-                        <button 
-                            onClick={() => setShowSettings(false)}
-                            className="text-sm text-muted-foreground hover:text-destructive transition-colors"
-                        >
-                            ✕ {t.close}
-                        </button>
-                    </div>
-                    
-                    <div className="space-y-8">
-                        <QuestionLimitSlider t={t} questionLimit={questionLimit} setQuestionLimit={setQuestionLimit} />
-                        
-                        <button
-                            onClick={handleStartPractice}
-                            className="w-full py-3 sm:py-4 bg-primary text-primary-foreground rounded-xl text-lg font-medium tracking-wide shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.99]"
-                        >
-                            {t.startPractice}
-                        </button>
-                    </div>
+              // Settings Modal / Card
+              <div className="w-full max-w-lg mx-auto bg-card/80 backdrop-blur-md border border-border rounded-3xl p-6 sm:p-10 shadow-xl shadow-primary/5 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-serif text-foreground">{t.settings}</h3>
+                  <button
+                    onClick={() => setShowSettings(false)}
+                    className="text-sm text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    ✕ {t.close}
+                  </button>
                 </div>
+
+                <div className="space-y-8">
+                  <QuestionLimitSlider t={t} questionLimit={questionLimit} setQuestionLimit={setQuestionLimit} />
+
+                  <button
+                    onClick={handleStartPractice}
+                    className="w-full py-3 sm:py-4 bg-primary text-primary-foreground rounded-xl text-lg font-medium tracking-wide shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.99]"
+                  >
+                    {t.startPractice}
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 space-y-8 bg-card/80 backdrop-blur-md border border-border rounded-3xl p-6 sm:p-10 shadow-xl shadow-primary/5">
-                
+
                 {!selectedJuz ? (
-                    // Juz Selection Grid
-                    <>
-                        <div className="flex justify-between items-center border-b border-border/50 pb-6">
-                            <div>
-                                <h3 className="text-2xl font-serif text-foreground">{t.chooseJuz}</h3>
-                                <p className="text-muted-foreground text-sm mt-1">{t.chooseJuzDesc}</p>
-                            </div>
-                            <button 
-                            onClick={() => setShowJuzSelection(false)} 
-                            className="text-sm text-muted-foreground hover:text-destructive transition-colors flex items-center gap-2 px-4 py-2 rounded-full hover:bg-destructive/10"
-                            >
-                                <span>✕</span> {t.close}
-                            </button>
-                        </div>
-                        
-                        <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-4 py-4">
-                            {Array.from({ length: 30 }, (_, i) => i + 1).map((juz) => (
-                                <button 
-                                    key={juz} 
-                                    onClick={() => setSelectedJuz(juz)}
-                                    className="aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl bg-background border border-border hover:border-primary hover:bg-primary/5 hover:scale-110 active:scale-95 transition-all duration-300 group shadow-sm hover:shadow-md relative overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 border-2 border-primary/0 group-hover:border-primary/10 rounded-2xl transition-all duration-300"></div>
-                                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-primary/70 font-medium hidden sm:block">{t.juz}</span>
-                                    <span className="text-2xl font-bold font-serif text-foreground group-hover:text-primary">{juz}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </>
-                ) : (
-                    // Surah Configuration for Selected Juz
-                    <div className="space-y-8 text-left w-full max-w-2xl mx-auto">
-                        <div className="flex justify-between items-start border-b border-border/50 pb-6">
-                            <div>
-                                <h3 className="text-2xl font-serif text-foreground">{t.configJuz} {selectedJuz}</h3>
-                                <p className="text-muted-foreground mt-1">{t.configJuzDesc}</p>
-                            </div>
-                            <button 
-                                onClick={() => {
-                                    setSelectedJuz(null);
-                                    setMode('all');
-                                    setSelectedSurah('all');
-                                }}
-                                className="text-sm text-primary hover:text-primary/80 underline underline-offset-4 font-medium"
-                            >
-                                {t.changeJuz}
-                            </button>
-                        </div>
-
-                        {loadingSurahs ? (
-                            <div className="py-12 text-center text-muted-foreground animate-pulse flex flex-col items-center gap-3">
-                                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                {t.loadingSurahs}
-                            </div>
-                        ) : (
-                            <div className="space-y-8">
-                                {/* Mode Selection */}
-                                <div className="flex p-1.5 bg-muted/30 rounded-2xl border border-border/50">
-                                    <button 
-                                        onClick={() => setMode('all')}
-                                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${mode === 'all' ? 'bg-background shadow-md text-primary font-bold ring-1 ring-border' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
-                                    >
-                                        {t.modeAll}
-                                    </button>
-                                    <button 
-                                        onClick={() => setMode('single')}
-                                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${mode === 'single' ? 'bg-background shadow-md text-primary font-bold ring-1 ring-border' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
-                                    >
-                                        {t.modeSingle}
-                                    </button>
-                                    <button 
-                                        onClick={() => setMode('range')}
-                                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${mode === 'range' ? 'bg-background shadow-md text-primary font-bold ring-1 ring-border' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
-                                    >
-                                        {t.modeRange}
-                                    </button>
-                                </div>
-
-                                {/* Dynamic Inputs based on Mode */}
-                                <div className="min-h-[120px] flex flex-col justify-center bg-muted/20 rounded-2xl p-6 border border-border/30">
-                                    {mode === 'all' && (
-                                        <div className="text-center space-y-2">
-                                            <p className="text-lg font-serif text-foreground">{t.modeAll}</p>
-                                            <p className="text-sm text-muted-foreground">
-                                                {t.modeAllDesc} {selectedJuz}.
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {mode === 'single' && (
-                                        <div className="space-y-3">
-                                            <label className="text-sm font-medium text-foreground block pl-1">{t.selectSurah}</label>
-                                            <div className="relative">
-                                                <select 
-                                                    value={selectedSurah}
-                                                    onChange={(e) => setSelectedSurah(e.target.value)}
-                                                    className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
-                                                >
-                                                    <option value="all" disabled>{t.selectSurah}...</option>
-                                                    {surahs.map(surah => (
-                                                        <option key={surah.id} value={surah.id}>
-                                                            {surah.id}. {surah.englishName} ({surah.name})
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                                                    ▼
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {mode === 'range' && (
-                                        <div className="grid grid-cols-2 gap-6">
-                                            <div className="space-y-3">
-                                                <label className="text-sm font-medium text-foreground block pl-1">{t.startSurah}</label>
-                                                <div className="relative">
-                                                    <select 
-                                                        value={rangeStart}
-                                                        onChange={(e) => setRangeStart(e.target.value)}
-                                                        className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
-                                                    >
-                                                        <option value="" disabled>{t.start}</option>
-                                                        {surahs.map(surah => (
-                                                            <option key={surah.id} value={surah.id}>
-                                                                {surah.id}. {surah.englishName}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                                                        ▼
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <label className="text-sm font-medium text-foreground block pl-1">{t.endSurah}</label>
-                                                <div className="relative">
-                                                    <select 
-                                                        value={rangeEnd}
-                                                        onChange={(e) => setRangeEnd(e.target.value)}
-                                                        className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
-                                                    >
-                                                        <option value="" disabled>{t.close}</option>
-                                                        {surahs.map(surah => (
-                                                            <option key={surah.id} value={surah.id} disabled={rangeStart ? surah.id < parseInt(rangeStart) : false}>
-                                                                {surah.id}. {surah.englishName}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
-                                                        ▼
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {((mode === 'all') || (mode === 'single' && selectedSurah !== 'all') || (mode === 'range' && rangeStart && rangeEnd)) && (
-                                    <div className="animate-in fade-in slide-in-from-top-4 duration-500">
-                                        <QuestionLimitSlider t={t} questionLimit={questionLimit} setQuestionLimit={setQuestionLimit} />
-                                    </div>
-                                )}
-
-                                <button
-                                    onClick={handleStartPractice}
-                                    disabled={
-                                        (mode === 'single' && selectedSurah === 'all') ||
-                                        (mode === 'range' && (!rangeStart || !rangeEnd))
-                                    }
-                                    className="w-full py-4 bg-primary text-primary-foreground rounded-xl text-lg font-medium tracking-wide shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.99]"
-                                >
-                                    {t.startPractice}
-                                </button>
-                            </div>
-                        )}
+                  // Juz Selection Grid
+                  <>
+                    <div className="flex justify-between items-center border-b border-border/50 pb-6">
+                      <div>
+                        <h3 className="text-2xl font-serif text-foreground">{t.chooseJuz}</h3>
+                        <p className="text-muted-foreground text-sm mt-1">{t.chooseJuzDesc}</p>
+                      </div>
+                      <button
+                        onClick={() => setShowJuzSelection(false)}
+                        className="text-sm text-muted-foreground hover:text-destructive transition-colors flex items-center gap-2 px-4 py-2 rounded-full hover:bg-destructive/10"
+                      >
+                        <span>✕</span> {t.close}
+                      </button>
                     </div>
+
+                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-4 py-4">
+                      {Array.from({ length: 30 }, (_, i) => i + 1).map((juz) => (
+                        <button
+                          key={juz}
+                          onClick={() => setSelectedJuz(juz)}
+                          className="aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl bg-background border border-border hover:border-primary hover:bg-primary/5 hover:scale-110 active:scale-95 transition-all duration-300 group shadow-sm hover:shadow-md relative overflow-hidden"
+                        >
+                          <div className="absolute inset-0 border-2 border-primary/0 group-hover:border-primary/10 rounded-2xl transition-all duration-300"></div>
+                          <span className="text-[10px] uppercase tracking-widest text-muted-foreground group-hover:text-primary/70 font-medium hidden sm:block">{t.juz}</span>
+                          <span className="text-2xl font-bold font-serif text-foreground group-hover:text-primary">{juz}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  // Surah Configuration for Selected Juz
+                  <div className="space-y-8 text-left w-full max-w-2xl mx-auto">
+                    <div className="flex justify-between items-start border-b border-border/50 pb-6">
+                      <div>
+                        <h3 className="text-2xl font-serif text-foreground">{t.configJuz} {selectedJuz}</h3>
+                        <p className="text-muted-foreground mt-1">{t.configJuzDesc}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedJuz(null);
+                          setMode('all');
+                          setSelectedSurah('all');
+                        }}
+                        className="text-sm text-primary hover:text-primary/80 underline underline-offset-4 font-medium"
+                      >
+                        {t.changeJuz}
+                      </button>
+                    </div>
+
+                    {loadingSurahs ? (
+                      <div className="py-12 text-center text-muted-foreground animate-pulse flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        {t.loadingSurahs}
+                      </div>
+                    ) : (
+                      <div className="space-y-8">
+                        {/* Mode Selection */}
+                        <div className="flex p-1.5 bg-muted/30 rounded-2xl border border-border/50">
+                          <button
+                            onClick={() => setMode('all')}
+                            className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${mode === 'all' ? 'bg-background shadow-md text-primary font-bold ring-1 ring-border' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
+                          >
+                            {t.modeAll}
+                          </button>
+                          <button
+                            onClick={() => setMode('single')}
+                            className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${mode === 'single' ? 'bg-background shadow-md text-primary font-bold ring-1 ring-border' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
+                          >
+                            {t.modeSingle}
+                          </button>
+                          <button
+                            onClick={() => setMode('range')}
+                            className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${mode === 'range' ? 'bg-background shadow-md text-primary font-bold ring-1 ring-border' : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`}
+                          >
+                            {t.modeRange}
+                          </button>
+                        </div>
+
+                        {/* Dynamic Inputs based on Mode */}
+                        <div className="min-h-[120px] flex flex-col justify-center bg-muted/20 rounded-2xl p-6 border border-border/30">
+                          {mode === 'all' && (
+                            <div className="text-center space-y-2">
+                              <p className="text-lg font-serif text-foreground">{t.modeAll}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {t.modeAllDesc} {selectedJuz}.
+                              </p>
+                            </div>
+                          )}
+
+                          {mode === 'single' && (
+                            <div className="space-y-3">
+                              <label className="text-sm font-medium text-foreground block pl-1">{t.selectSurah}</label>
+                              <div className="relative">
+                                <select
+                                  value={selectedSurah}
+                                  onChange={(e) => setSelectedSurah(e.target.value)}
+                                  className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+                                >
+                                  <option value="all" disabled>{t.selectSurah}...</option>
+                                  {surahs.map(surah => (
+                                    <option key={surah.id} value={surah.id}>
+                                      {surah.id}. {surah.englishName} ({surah.name})
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                  ▼
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {mode === 'range' && (
+                            <div className="grid grid-cols-2 gap-6">
+                              <div className="space-y-3">
+                                <label className="text-sm font-medium text-foreground block pl-1">{t.startSurah}</label>
+                                <div className="relative">
+                                  <select
+                                    value={rangeStart}
+                                    onChange={(e) => setRangeStart(e.target.value)}
+                                    className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+                                  >
+                                    <option value="" disabled>{t.start}</option>
+                                    {surahs.map(surah => (
+                                      <option key={surah.id} value={surah.id}>
+                                        {surah.id}. {surah.englishName}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                    ▼
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="space-y-3">
+                                <label className="text-sm font-medium text-foreground block pl-1">{t.endSurah}</label>
+                                <div className="relative">
+                                  <select
+                                    value={rangeEnd}
+                                    onChange={(e) => setRangeEnd(e.target.value)}
+                                    className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+                                  >
+                                    <option value="" disabled>{t.close}</option>
+                                    {surahs.map(surah => (
+                                      <option key={surah.id} value={surah.id} disabled={rangeStart ? surah.id < parseInt(rangeStart) : false}>
+                                        {surah.id}. {surah.englishName}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                    ▼
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {((mode === 'all') || (mode === 'single' && selectedSurah !== 'all') || (mode === 'range' && rangeStart && rangeEnd)) && (
+                          <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+                            <QuestionLimitSlider t={t} questionLimit={questionLimit} setQuestionLimit={setQuestionLimit} />
+                          </div>
+                        )}
+
+                        <button
+                          onClick={handleStartPractice}
+                          disabled={
+                            (mode === 'single' && selectedSurah === 'all') ||
+                            (mode === 'range' && (!rangeStart || !rangeEnd))
+                          }
+                          className="w-full py-4 bg-primary text-primary-foreground rounded-xl text-lg font-medium tracking-wide shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.99]"
+                        >
+                          {t.startPractice}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
-                
+
               </div>
             )}
           </div>
@@ -535,7 +537,22 @@ export default function Home() {
       </main>
 
       <footer className="py-8 text-center text-sm text-muted-foreground/60 relative z-10">
-        <p>© {new Date().getFullYear()} Sambung Ayat. {t.footer}</p>
+        <div className="mt-16 px-4">
+          <div className="max-w-2xl mx-auto p-6 rounded-3xl border border-border bg-muted/30 text-center">
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Jika aplikasi ini bermanfaat dan ingin ikut menjaga server tetap hidup, kamu bisa support di sini 🤍
+            </p>
+            <a
+              href="https://saweria.co/dayeeen"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center mt-5 px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition"
+            >
+              Dukung via Saweria
+            </a>
+            <p className="text-sm text-muted-foreground mt-5">© {new Date().getFullYear()} Sambung Ayat. {t.footer}</p>
+          </div>
+        </div>
       </footer>
     </div>
   );
