@@ -95,15 +95,23 @@ export async function fetchAyahDetails(number: number, lang: 'id' | 'en' = 'id')
   
   try {
     const data = await fetchWithRetry(url);
-    const response = await data.json();
+    const response = (await data.json()) as {
+      code: number;
+      status: string;
+      data?: Array<{
+        edition?: { identifier?: string };
+        audio?: string;
+        text?: string;
+      }>;
+    };
 
     if (response.code !== 200 || !response.data) {
       throw new Error(`Failed to fetch ayah details ${number}: ${response.status}`);
     }
 
     // Response data is an array of objects corresponding to the requested editions
-    const audioData = response.data.find((item: any) => item.edition.identifier === 'ar.alafasy');
-    const translationData = response.data.find((item: any) => item.edition.identifier === translationEdition);
+    const audioData = response.data.find((item) => item.edition?.identifier === 'ar.alafasy');
+    const translationData = response.data.find((item) => item.edition?.identifier === translationEdition);
 
     return {
       audio: audioData?.audio || '',

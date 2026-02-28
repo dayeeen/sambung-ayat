@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../../lib/prisma';
 
 export async function GET(request: Request) {
@@ -6,7 +7,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const sortBy = searchParams.get('sortBy');
 
-    let orderBy: any = [];
+    let orderBy: Prisma.UserOrderByWithRelationInput[] = [];
     if (sortBy === 'correct') {
       orderBy = [
         { longestCorrectStreak: 'desc' },
@@ -34,7 +35,6 @@ export async function GET(request: Request) {
         id: true,
         displayName: true,
         longestStreak: true,
-        // @ts-ignore
         longestCorrectStreak: true,
         totalCorrect: true,
         totalPoints: true,

@@ -13,38 +13,48 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Juz parameter is required' }, { status: 400 });
     }
 
-    const juz = parseInt(juzParam, 10);
-    if (isNaN(juz) || juz < 1 || juz > 30) {
-        return NextResponse.json({ error: 'Invalid Juz number' }, { status: 400 });
+    const juzNumbers = Array.from(
+      new Set(
+        juzParam
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean)
+          .map(v => parseInt(v, 10))
+      )
+    );
+
+    if (juzNumbers.length === 0 || juzNumbers.some(juz => isNaN(juz) || juz < 1 || juz > 30)) {
+      return NextResponse.json({ error: 'Invalid Juz number' }, { status: 400 });
     }
 
-    // Check cache
-    if (juzSurahCache.has(juz)) {
-        return NextResponse.json(juzSurahCache.get(juz));
-    }
+    const combinedSurahs = new Map<number, { id: number; name: string; englishName: string }>();
 
-    // Fetch full Juz content
-    const ayahs = await fetchJuz(juz);
-    
-    // Extract unique Surahs
-    const surahMap = new Map<number, { id: number; name: string; englishName: string }>();
-    
-    ayahs.forEach(ayah => {
-        if (!surahMap.has(ayah.surah.number)) {
+    for (const juz of juzNumbers) {
+      let surahsForJuz = juzSurahCache.get(juz);
+      if (!surahsForJuz) {
+        const ayahs = await fetchJuz(juz);
+
+        const surahMap = new Map<number, { id: number; name: string; englishName: string }>();
+        ayahs.forEach(ayah => {
+          if (!surahMap.has(ayah.surah.number)) {
             surahMap.set(ayah.surah.number, {
-                id: ayah.surah.number,
-                name: ayah.surah.name,
-                englishName: ayah.surah.englishName
+              id: ayah.surah.number,
+              name: ayah.surah.name,
+              englishName: ayah.surah.englishName
             });
-        }
-    });
+          }
+        });
 
-    const surahs = Array.from(surahMap.values());
-    
-    // Cache it
-    juzSurahCache.set(juz, surahs);
+        surahsForJuz = Array.from(surahMap.values()).sort((a, b) => a.id - b.id);
+        juzSurahCache.set(juz, surahsForJuz);
+      }
 
-    return NextResponse.json(surahs);
+      surahsForJuz.forEach(surah => {
+        if (!combinedSurahs.has(surah.id)) combinedSurahs.set(surah.id, surah);
+      });
+    }
+
+    return NextResponse.json(Array.from(combinedSurahs.values()).sort((a, b) => a.id - b.id));
   } catch (error) {
     console.error('Surah API Error:', error);
     return NextResponse.json(

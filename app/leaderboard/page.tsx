@@ -15,10 +15,12 @@ interface LeaderboardUser {
 
 export default function LeaderboardPage() {
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'daily' | 'correct' | 'points'>('points');
+  const [loadedSortBy, setLoadedSortBy] = useState<'daily' | 'correct' | 'points' | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+
+  const loading = loadedSortBy !== sortBy;
 
   useEffect(() => {
     const supabase = createClient();
@@ -29,18 +31,17 @@ export default function LeaderboardPage() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
     fetch(`/api/leaderboard?sortBy=${sortBy}`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
           setUsers(data);
         }
-        setLoading(false);
+        setLoadedSortBy(sortBy);
       })
       .catch((err) => {
         console.error('Failed to load leaderboard', err);
-        setLoading(false);
+        setLoadedSortBy(sortBy);
       });
   }, [sortBy]);
 
@@ -54,7 +55,7 @@ export default function LeaderboardPage() {
             Papan Konsistensi
           </h1>
           <p className="text-muted-foreground">
-            Istiqomah dalam mempelajari Al-Qur'an
+            {"Istiqomah dalam mempelajari Al-Qur'an"}
           </p>
           
           {!checkingSession && !isLoggedIn && (

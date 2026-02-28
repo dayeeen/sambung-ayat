@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   DndContext,
   useDraggable,
@@ -226,6 +227,7 @@ function PracticeContent() {
   const [isValidating, setIsValidating] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [isStarting, setIsStarting] = useState(true);
+  const [autoplayAudio, setAutoplayAudio] = useState(true);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -242,6 +244,16 @@ function PracticeContent() {
       localStorage.setItem('questionLimit', limitParam);
     }
   }, [limitParam]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('autoplayAudio');
+    if (stored === null) {
+      localStorage.setItem('autoplayAudio', 'true');
+      setAutoplayAudio(true);
+      return;
+    }
+    setAutoplayAudio(stored === 'true');
+  }, []);
 
   const playSound = (type: 'correct' | 'wrong' | 'completed') => {
     const audio = new Audio(`/sfx/${type === 'correct' ? 'correct-answer' : type === 'wrong' ? 'wrong-answer' : 'completed'}.mp3`);
@@ -329,6 +341,10 @@ function PracticeContent() {
   useEffect(() => {
     if (!isStarting && question && audioRef.current) {
       audioRef.current.load();
+      if (!autoplayAudio) {
+        setIsPlaying(false);
+        return;
+      }
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
         playPromise
@@ -339,7 +355,7 @@ function PracticeContent() {
           });
       }
     }
-  }, [question, isStarting]);
+  }, [question, isStarting, autoplayAudio]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -508,18 +524,18 @@ function PracticeContent() {
             >
               {t.newSession}
             </button>
-            <a
+            <Link
               href="/leaderboard"
               className="w-full py-4 bg-transparent border border-border text-foreground rounded-full text-lg font-medium hover:bg-muted/50 transition-all duration-300"
             >
               {t.leaderboard}
-            </a>
-            <a
+            </Link>
+            <Link
               href="/"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
             >
               {t.home}
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -561,7 +577,7 @@ function PracticeContent() {
 
               {question?.currentAyah.translation && (
                 <p className="text-sm md:text-base text-muted-foreground/80 italic px-4">
-                  "{question.currentAyah.translation}"
+                  {`"${question.currentAyah.translation}"`}
                 </p>
               )}
 

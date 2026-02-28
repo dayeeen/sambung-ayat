@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
         const targetLimit = sessionLimit || 10;
 
         // If session exists but limit doesn't match or it's already full, close it
-        // @ts-ignore
         if (session && (session.totalQuestions >= (session.maxQuestions || 10) || (session.maxQuestions || 10) !== targetLimit)) {
           await prisma.session.update({
              where: { id: session.id },
@@ -58,7 +57,6 @@ export async function POST(request: NextRequest) {
           });
         }
         
-        // @ts-ignore
         const maxQuestions = session.maxQuestions || 10;
 
         // Streak Logic
@@ -75,12 +73,10 @@ export async function POST(request: NextRequest) {
         const isYesterday = yesterday.toDateString() === lastActive.toDateString();
 
         let newCurrentStreak = user.currentStreak;
-        // @ts-ignore - Property exists after migration
         let newCurrentCorrectStreak = user.currentCorrectStreak || 0;
 
         // Point System Logic
         let gainedPoint = 0;
-        // @ts-ignore
         let newComboStreak = session.comboStreak || 0;
 
         if (isCorrect) {
@@ -106,7 +102,6 @@ export async function POST(request: NextRequest) {
           newComboStreak = 0;
         }
 
-        // @ts-ignore
         const newMaxCombo = Math.max(session.maxCombo || 0, newComboStreak);
         const newTotalQuestions = session.totalQuestions + 1;
         const isSessionFinished = newTotalQuestions >= maxQuestions;
@@ -152,7 +147,6 @@ export async function POST(request: NextRequest) {
             longestStreak: isCorrect && newCurrentStreak > user.longestStreak ? newCurrentStreak : undefined,
             
             currentCorrectStreak: newCurrentCorrectStreak,
-            // @ts-ignore
             longestCorrectStreak: newCurrentCorrectStreak > (user.longestCorrectStreak || 0) ? newCurrentCorrectStreak : undefined,
             
             totalPoints: { increment: gainedPoint },
@@ -162,7 +156,6 @@ export async function POST(request: NextRequest) {
         
         currentStreak = updatedUser.currentStreak;
         longestStreak = updatedUser.longestStreak;
-        // @ts-ignore
         currentCorrectStreak = updatedUser.currentCorrectStreak;
       }
     } catch (dbError) {

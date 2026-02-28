@@ -1,19 +1,16 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Languages } from 'lucide-react'
 
 export function LanguageSwitcher() {
-  const [lang, setLang] = useState('ID')
-  const [isOpen, setIsOpen] = useState(false)
-
-  // Load saved language preference
-  useEffect(() => {
+  const [lang, setLang] = useState(() => {
+    if (typeof window === 'undefined') return 'ID'
     const savedLang = localStorage.getItem('app-language')
-    if (savedLang) {
-      setLang(savedLang)
-    }
-  }, [])
+    if (!savedLang) return 'ID'
+    return savedLang.toUpperCase()
+  })
+  const [isOpen, setIsOpen] = useState(false)
 
   const toggleLanguage = (newLang: string) => {
     const lowerLang = newLang.toLowerCase()

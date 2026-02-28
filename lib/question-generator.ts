@@ -3,14 +3,50 @@ import { GeneratedQuestion, QuestionOption, Ayah } from '../types/quran';
 
 const TOTAL_AYAHS = 6236;
 
-export async function generateQuestion(juz?: number, surah?: string, lang: 'id' | 'en' = 'id'): Promise<GeneratedQuestion> {
+type SurahFilter =
+  | { kind: 'range'; start: number; end: number }
+  | { kind: 'set'; set: Set<number> };
+
+function parseSurahFilter(surah?: string): SurahFilter | null {
+  if (!surah) return null;
+
+  if (surah.includes(',')) {
+    const numbers = surah
+      .split(',')
+      .map(v => v.trim())
+      .filter(Boolean)
+      .map(v => parseInt(v, 10))
+      .filter(n => !isNaN(n));
+    if (numbers.length === 0) return null;
+    return { kind: 'set', set: new Set(numbers) };
+  }
+
+  if (surah.includes('-')) {
+    const [start, end] = surah.split('-').map(v => parseInt(v.trim(), 10));
+    if (isNaN(start) || isNaN(end)) return null;
+    return { kind: 'range', start: Math.min(start, end), end: Math.max(start, end) };
+  }
+
+  const surahId = parseInt(surah, 10);
+  if (isNaN(surahId)) return null;
+  return { kind: 'set', set: new Set([surahId]) };
+}
+
+export async function generateQuestion(juz?: number | number[], surah?: string, lang: 'id' | 'en' = 'id'): Promise<GeneratedQuestion> {
   let currentAyah: Ayah;
   let correctNext: Ayah;
   let potentialDistractors: Ayah[] = [];
 
-  if (juz) {
+  const juzList = Array.isArray(juz) ? juz : juz ? [juz] : [];
+  const hasJuz = juzList.length > 0;
+  const surahFilter = parseSurahFilter(surah);
+
+  if (hasJuz) {
     // Juz Mode: Fetch all ayahs in the Juz
-    const juzAyahs = await fetchJuz(juz);
+    const juzAyahLists = await Promise.all(juzList.map(j => fetchJuz(j)));
+    const allJuzAyahs: Ayah[] = [];
+    juzAyahLists.forEach(list => allJuzAyahs.push(...list));
+    const juzAyahs = Array.from(new Map(allJuzAyahs.map(a => [a.number, a])).values());
     
     // Filter out:
     // 1. The very last ayah of the Quran (6236)
@@ -22,17 +58,13 @@ export async function generateQuestion(juz?: number, surah?: string, lang: 'id' 
     });
 
     // Apply Surah Filter if provided
-    if (surah) {
-        if (surah.includes('-')) {
-            // Range (e.g., "110-114")
-            const [start, end] = surah.split('-').map(Number);
-            validStarts = validStarts.filter(a => a.surah.number >= start && a.surah.number <= end);
-            potentialDistractors = juzAyahs.filter(a => a.surah.number >= start && a.surah.number <= end);
+    if (surahFilter) {
+        if (surahFilter.kind === 'range') {
+            validStarts = validStarts.filter(a => a.surah.number >= surahFilter.start && a.surah.number <= surahFilter.end);
+            potentialDistractors = juzAyahs.filter(a => a.surah.number >= surahFilter.start && a.surah.number <= surahFilter.end);
         } else {
-            // Single Surah (e.g., "110")
-            const surahId = parseInt(surah);
-            validStarts = validStarts.filter(a => a.surah.number === surahId);
-            potentialDistractors = juzAyahs.filter(a => a.surah.number === surahId);
+            validStarts = validStarts.filter(a => surahFilter.set.has(a.surah.number));
+            potentialDistractors = juzAyahs.filter(a => surahFilter.set.has(a.surah.number));
         }
     } else {
         potentialDistractors = juzAyahs;
@@ -60,11 +92,16 @@ export async function generateQuestion(juz?: number, surah?: string, lang: 'id' 
     // Initial fetch
     currentAyah = await fetchRandomAyah();
     
-    while (!isValid && attempts < 10) {
+    while (!isValid && attempts < 50) {
         const isLastInQuran = currentAyah.number === TOTAL_AYAHS;
         const isLastInSurah = currentAyah.numberInSurah === currentAyah.surah.numberOfAyahs;
+        const matchesSurah = !surahFilter
+          ? true
+          : surahFilter.kind === 'range'
+            ? currentAyah.surah.number >= surahFilter.start && currentAyah.surah.number <= surahFilter.end
+            : surahFilter.set.has(currentAyah.surah.number);
         
-        if (!isLastInQuran && !isLastInSurah) {
+        if (!isLastInQuran && !isLastInSurah && matchesSurah) {
             isValid = true;
         } else {
             attempts++;
@@ -98,7 +135,7 @@ export async function generateQuestion(juz?: number, surah?: string, lang: 'id' 
     
     let distractor: Ayah | null = null;
 
-    if (juz && potentialDistractors.length > 0) {
+    if (hasJuz && potentialDistractors.length > 0) {
         // Pick random from same Juz
         const randomIdx = Math.floor(Math.random() * potentialDistractors.length);
         const candidate = potentialDistractors[randomIdx];
