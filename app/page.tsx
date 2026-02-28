@@ -445,6 +445,8 @@ export default function Home() {
                       </button>
                     </div>
 
+
+
                     {loadingSurahs ? (
                       <div className="py-10 text-center text-muted-foreground animate-pulse flex flex-col items-center gap-3">
                         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -466,11 +468,10 @@ export default function Home() {
                                 setSelectedSurahs(surahs.map(s => s.id));
                               }
                             }}
-                            className={`text-xs underline underline-offset-4 transition-colors ${
-                              selectedSurahs.length === surahs.length 
-                                ? 'text-primary font-bold' 
+                            className={`text-xs underline underline-offset-4 transition-colors ${selectedSurahs.length === surahs.length
+                                ? 'text-primary font-bold'
                                 : 'text-muted-foreground hover:text-primary'
-                            }`}
+                              }`}
                           >
                             {t.allSurahs}
                           </button>
@@ -511,7 +512,24 @@ export default function Home() {
                       </div>
                     )}
 
+
                     <QuestionLimitSlider t={t} questionLimit={questionLimit} setQuestionLimit={setQuestionLimit} />
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-background/50 px-4 py-3">
+                      <span className="text-sm font-medium text-foreground">{t.autoplayAudio}</span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={autoplayAudio}
+                        onClick={() => setAutoplayAudio(v => !v)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full border transition-colors ${autoplayAudio ? 'bg-primary border-primary/40' : 'bg-muted border-border'
+                          }`}
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-background shadow-sm transition-transform ${autoplayAudio ? 'translate-x-5' : 'translate-x-0.5'
+                            }`}
+                        />
+                      </button>
+                    </div>
 
                     <button
                       onClick={handleStartPractice}
