@@ -13,8 +13,13 @@ interface LeaderboardUser {
   totalPoints: number;
 }
 
+interface CurrentUserRank extends LeaderboardUser {
+  rank: number;
+}
+
 export default function LeaderboardPage() {
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
+  const [currentUser, setCurrentUser] = useState<CurrentUserRank | null>(null);
   const [sortBy, setSortBy] = useState<'daily' | 'correct' | 'points'>('points');
   const [loadedSortBy, setLoadedSortBy] = useState<'daily' | 'correct' | 'points' | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -34,9 +39,19 @@ export default function LeaderboardPage() {
     fetch(`/api/leaderboard?sortBy=${sortBy}`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
+        if (data.topUsers) {
+          setUsers(data.topUsers);
+        } else if (Array.isArray(data)) {
+          // Fallback for backward compatibility
           setUsers(data);
         }
+        
+        if (data.currentUser) {
+            setCurrentUser(data.currentUser);
+        } else {
+            setCurrentUser(null);
+        }
+
         setLoadedSortBy(sortBy);
       })
       .catch((err) => {
@@ -175,6 +190,46 @@ export default function LeaderboardPage() {
             </div>
           )}
         </div>
+
+        {/* Current User Rank (Sticky or Separate) */}
+        {!loading && currentUser && (
+            <div className="bg-card border border-primary/20 rounded-2xl shadow-sm p-4 animate-in fade-in slide-in-from-bottom-4">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-2 text-center">
+                    Peringkat Antum
+                </div>
+                <div className="grid grid-cols-10 sm:grid-cols-12 gap-2 sm:gap-4 items-center">
+                    {/* Rank */}
+                    <div className="col-span-2 sm:col-span-2 flex justify-center">
+                      <div className="w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm bg-primary/10 text-primary ring-2 ring-primary/20">
+                        {currentUser.rank}
+                      </div>
+                    </div>
+
+                    {/* Name */}
+                    <div className="col-span-6 sm:col-span-6 font-medium truncate flex items-center gap-2 text-base">
+                      {currentUser.displayName || 'Hamba Allah'}
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">You</span>
+                    </div>
+
+                    {/* Streak / Points */}
+                    <div className="col-span-2 sm:col-span-2 text-center font-mono text-sm">
+                      <span className={`font-bold ${sortBy === 'points' ? 'text-emerald-500' : 'text-orange-500'}`}>
+                        {sortBy === 'points' 
+                          ? `🌟 ${currentUser.totalPoints || 0}`
+                          : sortBy === 'daily' 
+                            ? `🔥 ${currentUser.longestStreak}` 
+                            : `🔥 ${currentUser.longestCorrectStreak}`
+                        }
+                      </span>
+                    </div>
+
+                    {/* Total */}
+                    <div className="hidden sm:block sm:col-span-2 text-center font-mono text-sm text-muted-foreground">
+                      {currentUser.totalCorrect}
+                    </div>
+                </div>
+            </div>
+        )}
 
         <div className="text-center">
            <Link href="/" className="text-primary hover:underline text-sm">
