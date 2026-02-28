@@ -51,6 +51,17 @@ model Session {
 
   user            User     @relation(fields: [userId], references: [id])
   answers         Answer[]
+  pendingQuestions PendingQuestion[]
+}
+
+model PendingQuestion {
+  id            String    @id @default(uuid())
+  sessionId     String
+  currentAyahId Int
+  correctAyahId Int
+  answeredAt    DateTime?
+
+  session       Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
 model Answer {

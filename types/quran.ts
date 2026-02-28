@@ -34,6 +34,8 @@ export interface QuestionOption {
 }
 
 export interface Question {
+  /** Present when fetched with sessionId (tracked mode) */
+  questionId?: string;
   currentAyah: {
     id: number;
     text: string;
@@ -56,6 +58,10 @@ export interface ValidationRequest {
   selectedAyahId: number;
   currentAyahId: number;
   sessionLimit?: number;
+  /** Required for tracked sessions (anti-abuse). Omit for guest validation only. */
+  sessionId?: string;
+  /** Required for tracked sessions. Omit for guest validation only. */
+  questionId?: string;
 }
 
 export interface ValidationResponse {

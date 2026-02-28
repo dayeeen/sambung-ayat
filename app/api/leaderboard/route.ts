@@ -1,29 +1,20 @@
-import { NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
-import { prisma } from '../../../lib/prisma';
-import { createClient } from '../../../lib/supabase/server';
+import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
+import { prisma } from "../../../lib/prisma";
+import { createClient } from "../../../lib/supabase/server";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const sortBy = searchParams.get('sortBy');
+    const sortBy = searchParams.get("sortBy");
 
     let orderBy: Prisma.UserOrderByWithRelationInput[] = [];
-    if (sortBy === 'correct') {
-      orderBy = [
-        { longestCorrectStreak: 'desc' },
-        { totalCorrect: 'desc' },
-      ];
-    } else if (sortBy === 'daily') {
-      orderBy = [
-        { longestStreak: 'desc' },
-        { totalCorrect: 'desc' },
-      ];
+    if (sortBy === "correct") {
+      orderBy = [{ longestCorrectStreak: "desc" }, { totalCorrect: "desc" }];
+    } else if (sortBy === "daily") {
+      orderBy = [{ longestStreak: "desc" }, { totalCorrect: "desc" }];
     } else {
-      orderBy = [
-        { totalPoints: 'desc' },
-        { longestStreak: 'desc' },
-      ];
+      orderBy = [{ totalPoints: "desc" }, { longestStreak: "desc" }];
     }
 
     const topUsers = await prisma.user.findMany({
@@ -47,56 +38,78 @@ export async function GET(request: Request) {
     let currentUserData = null;
 
     const supabase = await createClient();
-    const { data: { user: sessionUser } } = await supabase.auth.getUser();
+    const {
+      data: { user: sessionUser },
+    } = await supabase.auth.getUser();
 
     if (sessionUser) {
       const user = await prisma.user.findUnique({
         where: { id: sessionUser.id },
         select: {
-            id: true,
-            displayName: true,
-            longestStreak: true,
-            longestCorrectStreak: true,
-            totalCorrect: true,
-            totalPoints: true,
-        }
+          id: true,
+          displayName: true,
+          longestStreak: true,
+          longestCorrectStreak: true,
+          totalCorrect: true,
+          totalPoints: true,
+        },
       });
 
       if (user) {
         currentUserData = user;
-        
+
+        let orCondition: Prisma.UserWhereInput[];
+        if (sortBy === "correct") {
+          orCondition = [
+            { longestCorrectStreak: { gt: user.longestCorrectStreak } },
+            {
+              longestCorrectStreak: user.longestCorrectStreak,
+              totalCorrect: { gt: user.totalCorrect },
+            },
+          ];
+        } else if (sortBy === "daily") {
+          orCondition = [
+            { longestStreak: { gt: user.longestStreak } },
+            {
+              longestStreak: user.longestStreak,
+              totalCorrect: { gt: user.totalCorrect },
+            },
+          ];
+        } else {
+          orCondition = [
+            { totalPoints: { gt: user.totalPoints } },
+            {
+              totalPoints: user.totalPoints,
+              longestStreak: { gt: user.longestStreak },
+            },
+          ];
+        }
+
         const betterUsersCount = await prisma.user.count({
-            where: {
-                isGuest: false,
-                OR: sortBy === 'correct' ? [
-                    { longestCorrectStreak: { gt: user.longestCorrectStreak } },
-                    { longestCorrectStreak: user.longestCorrectStreak, totalCorrect: { gt: user.totalCorrect } }
-                ] : sortBy === 'daily' ? [
-                    { longestStreak: { gt: user.longestStreak } },
-                    { longestStreak: user.longestStreak, totalCorrect: { gt: user.totalCorrect } }
-                ] : [
-                    { totalPoints: { gt: user.totalPoints } },
-                    { totalPoints: user.totalPoints, longestStreak: { gt: user.longestStreak } }
-                ]
-            }
+          where: {
+            isGuest: false,
+            OR: orCondition,
+          },
         });
-        
+
         currentUserRank = betterUsersCount + 1;
       }
     }
 
     return NextResponse.json({
-        topUsers,
-        currentUser: currentUserData ? {
+      topUsers,
+      currentUser: currentUserData
+        ? {
             ...currentUserData,
-            rank: currentUserRank
-        } : null
+            rank: currentUserRank,
+          }
+        : null,
     });
   } catch (error) {
-    console.error('Leaderboard API Error:', error);
+    console.error("Leaderboard API Error:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch leaderboard' },
-      { status: 500 }
+      { error: "Failed to fetch leaderboard" },
+      { status: 500 },
     );
   }
 }
