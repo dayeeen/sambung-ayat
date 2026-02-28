@@ -46,7 +46,7 @@ const uiText = {
     feature3Desc: 'Tanpa iklan, desain minimalis. Hanya antum dan Al-Qur\'an.',
     footer: 'Dibuat dengan niat tulus.',
     beta: 'Rilis Beta',
-    ver: 'Versi 1.0.0'
+    ver: 'Versi 1.1.0'
   },
   en: {
     title: 'Connect',
@@ -83,7 +83,7 @@ const uiText = {
     feature3Desc: 'No ads, minimalist design. Just you and the Qur\'an.',
     footer: 'Made with sincere intentions.',
     beta: 'Beta Release',
-    ver: 'Version 1.0.0'
+    ver: 'Version 1.1.0'
   }
 };
 
