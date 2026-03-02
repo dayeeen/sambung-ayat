@@ -46,7 +46,11 @@ const uiText = {
     feature3Desc: 'Tanpa iklan, desain minimalis. Hanya antum dan Al-Qur\'an.',
     footer: 'Dibuat dengan niat tulus.',
     beta: 'Rilis Beta',
-    ver: 'Versi 1.1.0'
+    ver: 'Versi 1.1.0',
+    siteMovedTitle: 'Pindah Server',
+    siteMovedDesc: 'Alhamdulillah, karena jumlah pengguna terus bertambah, server sebelumnya sudah tidak lagi optimal. Untuk memastikan pengalaman yang lebih cepat dan stabil, kami telah melakukan migrasi ke server baru.',
+    siteMovedReason: 'Silakan akses melalui alamat terbaru di bawah ini ya.',
+    siteMovedCta: 'Kunjungi saayat.site'
   },
   en: {
     title: 'Connect',
@@ -83,7 +87,11 @@ const uiText = {
     feature3Desc: 'No ads, minimalist design. Just you and the Qur\'an.',
     footer: 'Made with sincere intentions.',
     beta: 'Beta Release',
-    ver: 'Version 1.1.0'
+    ver: 'Version 1.1.0',
+    siteMovedTitle: 'We Moved',
+    siteMovedDesc: 'Sambung Ayat has moved to a new server.',
+    siteMovedReason: 'Thanks to your support, usage increased and the current server couldn’t keep up. We moved for better speed and stability. Please use the new address below.',
+    siteMovedCta: 'Visit saayat.site'
   }
 };
 
@@ -169,6 +177,7 @@ export default function Home() {
   const [language, setLanguage] = useState<'id' | 'en'>('id');
   const [showJuzSelection, setShowJuzSelection] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const forceMove = true;
   const [selectedJuzs, setSelectedJuzs] = useState<number[]>([]);
   const [surahs, setSurahs] = useState<Surah[]>([]);
   const [loadingSurahs, setLoadingSurahs] = useState(false);
@@ -178,8 +187,45 @@ export default function Home() {
   const [autoplayAudio, setAutoplayAudio] = useState(true);
   const [isAutoplayLoaded, setIsAutoplayLoaded] = useState(false);
   const [isJuzExpanded, setIsJuzExpanded] = useState(true);
+  const [showDomainNotice, setShowDomainNotice] = useState(false);
+  const [isDomainNoticeLoaded, setIsDomainNoticeLoaded] = useState(false);
 
   const t = uiText[language];
+
+  if (forceMove) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-hidden overflow-y-auto relative">
+        <IslamicPattern />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10 w-full min-h-full">
+          <div className="w-full max-w-lg mx-auto space-y-6">
+            <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6 sm:p-8">
+              <div className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-1">
+                {t.siteMovedTitle}
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                {t.title} <span className="text-primary font-serif italic">Ayat</span>
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-3">
+                {t.siteMovedDesc}
+              </p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+                {t.siteMovedReason}
+              </p>
+              <a
+                href="https://saayat.site"
+                className="mt-6 inline-flex items-center justify-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition w-full"
+              >
+                {t.siteMovedCta}
+              </a>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              © {new Date().getFullYear()} Sambung Ayat
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const updateLang = () => {
@@ -223,6 +269,18 @@ export default function Home() {
       localStorage.setItem('autoplayAudio', autoplayAudio ? 'true' : 'false');
     }
   }, [autoplayAudio, isAutoplayLoaded]);
+
+  // Domain move notice persistence
+  useEffect(() => {
+    const dismissed = localStorage.getItem('domainNoticeDismissed');
+    setShowDomainNotice(dismissed !== 'true');
+    setIsDomainNoticeLoaded(true);
+  }, []);
+
+  const dismissDomainNotice = () => {
+    localStorage.setItem('domainNoticeDismissed', 'true');
+    setShowDomainNotice(false);
+  };
 
   useEffect(() => {
     if (selectedJuzs.length > 0) {
@@ -271,6 +329,37 @@ export default function Home() {
 
       <main className="flex-1 flex flex-col items-center justify-center p-4 pt-24 pb-12 sm:p-20 text-center relative z-10 w-full min-h-full">
         <div className="max-w-4xl w-full space-y-8 sm:space-y-12 animate-fade-in flex flex-col items-center my-auto">
+
+          {/* Domain Move Notice */}
+          {isDomainNoticeLoaded && showDomainNotice && (
+            <div className="w-full max-w-2xl">
+              <div className="flex items-start justify-between gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-left">
+                <div className="space-y-1">
+                  <div className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                    {t.siteMovedTitle}
+                  </div>
+                  <p className="text-sm text-foreground/80">
+                    {t.siteMovedDesc}
+                  </p>
+                  <a
+                    href="https://saayat.site"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline underline-offset-4"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t.siteMovedCta} →
+                  </a>
+                </div>
+                <button
+                  onClick={dismissDomainNotice}
+                  aria-label={t.close}
+                  className="p-2 rounded-full hover:bg-amber-500/20 text-amber-700/80 hover:text-amber-700 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Hero Section */}
           <div className="space-y-6 sm:space-y-8 max-w-3xl relative w-full px-4 sm:px-0">

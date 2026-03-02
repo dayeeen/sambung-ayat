@@ -1,330 +1,235 @@
 'use client';
 
-import { useState, useEffect, Suspense, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import {
-  DndContext,
-  useDraggable,
-  useDroppable,
-  DragEndEvent,
-  DragOverlay,
-  defaultDropAnimationSideEffects,
-  DropAnimation,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  DragStartEvent,
-  closestCenter
-} from '@dnd-kit/core';
-import { Question, QuestionOption, ValidationResponse } from '../../types/quran';
-import confetti from 'canvas-confetti';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ChevronDown, ChevronUp, X } from 'lucide-react';
+
+interface Surah {
+  id: number;
+  name: string;
+  englishName: string;
+}
 
 const uiText = {
   id: {
-    loading: 'Memuat Soal...',
-    question: 'Pertanyaan',
-    pts: 'POIN',
-    tapToRemove: 'Tekan untuk menghapus',
-    dragHere: 'Tarik ayat yang benar ke sini',
-    play: 'Putar Tilawah',
-    stop: 'Hentikan Tilawah',
-    confirm: 'Konfirmasi Jawaban',
-    correct: 'MasyaAllah, benar!',
-    incorrect: 'Lanjutan yang benar adalah:',
-    next: 'Ayat Berikutnya →',
-    finish: 'Selesai',
-    sessionFinished: 'Sesi Selesai!',
-    completed: 'Alhamdulillah, antum telah menyelesaikan',
-    questions: 'soal',
-    totalPoints: 'Total Poin',
-    correctAnswers: 'Jawaban Benar',
-    lastStreak: 'Streak Terakhir',
-    maxCombo: 'Max Combo',
-    newSession: 'Mulai Sesi Baru',
-    leaderboard: 'Lihat Peringkat',
-    home: 'Kembali ke Beranda',
-    surah: 'Surah',
-    ayah: 'Ayat',
-    selected: 'Terpilih',
-    pointsLabel: 'Poin',
-    comboLabel: 'Combo'
+    title: 'Sambung',
+    subtitle: 'Latihan Hafalan Al-Qur\'an',
+    verse: '"Dan Kami telah memudahkan Al-Qur\'an untuk pelajaran, maka adakah orang yang mau mengambil pelajaran?"',
+    startPractice: 'Mulai Latihan',
+    selectJuz: 'Pilih Juz',
+    settings: 'Pengaturan Latihan',
+    questionCount: 'Jumlah Soal',
+    questions: 'Soal',
+    autoplayAudio: 'Autoplay Audio',
+    allSurahs: 'Semua Surah',
+    close: 'Tutup',
+    juz: 'Juz',
+    chooseJuz: 'Pilih Juz',
+    chooseJuzDesc: 'Pilih satu atau lebih juz yang ingin antum latih',
+    configJuz: 'Juz yang dipilih:',
+    resetJuz: 'Reset Juz',
+    loadingSurahs: 'Memuat data surah...',
+    modeAll: 'Satu Juz Penuh',
+    modeSingle: 'Per Surah',
+    modeRange: 'Rentang Surah',
+    modeAllDesc: 'Antum akan diuji dari seluruh ayat dalam Juz',
+    selectSurah: 'Pilih Surah',
+    selectSurahDesc: 'Pilih satu atau lebih surah',
+    startSurah: 'Mulai Surah',
+    endSurah: 'Sampai Surah',
+    start: 'Mulai',
+    feature1Title: 'Ayat per Ayat',
+    feature1Desc: 'Latihan berkesinambungan dengan umpan balik instan pada hafalan antum.',
+    feature2Title: 'Active Recall',
+    feature2Desc: 'Perkuat ingatan dengan secara aktif mengingat kelanjutan ayat.',
+    feature3Title: 'Fokus Ibadah',
+    feature3Desc: 'Tanpa iklan, desain minimalis. Hanya antum dan Al-Qur\'an.',
+    footer: 'Dibuat dengan niat tulus.',
+    beta: 'Rilis Beta',
+    ver: 'Versi 1.1.0',
+    siteMovedTitle: 'Pindah Server',
+    siteMovedDesc: 'Alhamdulillah, karena jumlah pengguna terus bertambah, server sebelumnya sudah tidak lagi optimal. Untuk memastikan pengalaman yang lebih cepat dan stabil, kami telah melakukan migrasi ke server baru.',
+    siteMovedReason: 'Silakan akses melalui alamat terbaru di bawah ini ya.',
+    siteMovedCta: 'Kunjungi saayat.site'
   },
   en: {
-    loading: 'Loading Question...',
-    question: 'Question',
-    pts: 'PTS',
-    tapToRemove: 'Tap to remove',
-    dragHere: 'Drag the correct ayah here',
-    play: 'Play Recitation',
-    stop: 'Stop Recitation',
-    confirm: 'Confirm Selection',
-    correct: 'MashaAllah, Correct!',
-    incorrect: 'The correct continuation is:',
-    next: 'Next Verse →',
-    finish: 'Finish',
-    sessionFinished: 'Session Finished!',
-    completed: 'Alhamdulillah, you have completed',
-    questions: 'questions',
-    totalPoints: 'Total Points',
-    correctAnswers: 'Correct Answers',
-    lastStreak: 'Last Streak',
-    maxCombo: 'Max Combo',
-    newSession: 'Start New Session',
-    leaderboard: 'View Leaderboard',
-    home: 'Back to Home',
-    surah: 'Surah',
-    ayah: 'Ayah',
-    selected: 'Selected',
-    pointsLabel: 'Points',
-    comboLabel: 'Combo'
+    title: 'Connect',
+    subtitle: 'Qur\'an Memorization Practice',
+    verse: '"And We have certainly made the Qur\'an easy for remembrance, so is there any who will remember?"',
+    startPractice: 'Start Practice',
+    selectJuz: 'Select Juz',
+    settings: 'Practice Settings',
+    questionCount: 'Question Count',
+    questions: 'Questions',
+    autoplayAudio: 'Autoplay Audio',
+    allSurahs: 'All Surahs',
+    close: 'Close',
+    juz: 'Juz',
+    chooseJuz: 'Select Juz',
+    chooseJuzDesc: 'Select one or more juz to practice',
+    configJuz: 'Selected Juz',
+    resetJuz: 'Reset Juz',
+    loadingSurahs: 'Loading surahs...',
+    modeAll: 'Full Juz',
+    modeSingle: 'Per Surah',
+    modeRange: 'Surah Range',
+    modeAllDesc: 'You will be tested on all verses in Juz',
+    selectSurah: 'Select Surah',
+    selectSurahDesc: 'Select one or more surahs',
+    startSurah: 'Start Surah',
+    endSurah: 'End Surah',
+    start: 'Start',
+    feature1Title: 'Verse by Verse',
+    feature1Desc: 'Continuous practice with instant feedback on your memorization.',
+    feature2Title: 'Active Recall',
+    feature2Desc: 'Strengthen memory by actively recalling the next verse.',
+    feature3Title: 'Focus on Worship',
+    feature3Desc: 'No ads, minimalist design. Just you and the Qur\'an.',
+    footer: 'Made with sincere intentions.',
+    beta: 'Beta Release',
+    ver: 'Version 1.1.0',
+    siteMovedTitle: 'We Moved',
+    siteMovedDesc: 'Sambung Ayat has moved to a new server.',
+    siteMovedReason: 'Thanks to your support, usage increased and the current server couldn’t keep up. We moved for better speed and stability. Please use the new address below.',
+    siteMovedCta: 'Visit saayat.site'
   }
 };
 
-// Draggable Option Component
-function DraggableOption({ option, isSelected, isDisabled, language }: { option: QuestionOption; isSelected: boolean; isDisabled: boolean; language: 'id' | 'en' }) {
-  const t = uiText[language];
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `option-${option.id}`,
-    data: { option },
-    disabled: isDisabled || isSelected,
-  });
+// Komponen Pattern Geometris Islami
+const IslamicPattern = () => (
+  <div className="fixed inset-0 -z-10 pointer-events-none opacity-[0.03] dark:opacity-[0.05]">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="islamic-pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M0 20 L20 0 L40 20 L20 40 Z" fill="none" stroke="currentColor" strokeWidth="0.5" />
+          <circle cx="20" cy="20" r="8" fill="none" stroke="currentColor" strokeWidth="0.5" />
+          <path d="M20 0 L20 40 M0 20 L40 20" stroke="currentColor" strokeWidth="0.5" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#islamic-pattern)" />
+    </svg>
+  </div>
+);
 
-  const style = transform ? {
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-  } : undefined;
+// Komponen Bismillah Kaligrafi
+const Bismillah = () => (
+  <div className="text-2xl sm:text-3xl font-arabic text-primary/80 mb-6 animate-fade-in">
+    بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
+  </div>
+);
 
-  if (isSelected) {
-    return (
-      <div className="w-full p-4 rounded-xl border-2 border-dashed border-border bg-muted/20 opacity-50 flex items-center justify-center min-h-[80px]">
-        <span className="text-muted-foreground text-sm">{t.selected}</span>
-      </div>
-    );
-  }
-
-  if (isDragging) {
-    return (
-      <div className="w-full p-4 rounded-xl bg-muted/10 border-2 border-primary/20 opacity-30 min-h-[80px]" />
-    );
-  }
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
-      className={`w-full p-4 rounded-xl border border-border bg-white dark:bg-stone-800 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-grab active:cursor-grabbing touch-none select-none
-        ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-      `}
-    >
-      <p className="font-arabic text-lg sm:text-xl md:text-2xl text-center leading-relaxed" dir="rtl">
-        {option.text}
-      </p>
+const QuestionLimitSlider = ({
+  t,
+  questionLimit,
+  setQuestionLimit
+}: {
+  t: typeof uiText.id,
+  questionLimit: number,
+  setQuestionLimit: (limit: number) => void
+}) => (
+  <div className="space-y-4 py-2">
+    <div className="flex justify-between items-center mb-2">
+      <label className="text-sm font-medium text-muted-foreground">
+        {t.questionCount}
+      </label>
+      <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 min-w-[4rem] text-center">
+        {questionLimit} {t.questions}
+      </span>
     </div>
-  );
-}
 
-export default function PracticePage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground animate-pulse">
-        <div className="text-lg tracking-widest uppercase">Loading...</div>
+    <div className="flex items-center gap-4">
+      <button
+        onClick={() => setQuestionLimit(Math.max(1, questionLimit - 1))}
+        className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+        aria-label="Decrease question limit"
+      >
+        -
+      </button>
+      <div className="relative w-full h-6 flex items-center select-none touch-none flex-1">
+        <input
+          type="range"
+          min="1"
+          max="20"
+          step="1"
+          value={questionLimit}
+          onChange={(e) => setQuestionLimit(parseInt(e.target.value))}
+          className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+        />
       </div>
-    }>
-      <PracticeContent />
-    </Suspense>
-  );
-}
-
-type DropZoneProps = {
-  selectedOption: QuestionOption | null;
-  isCorrect: boolean | null;
-  isSubmitted: boolean;
-  onReset: () => void;
-  language: 'id' | 'en';
-  isValidating?: boolean;
-};
-
-function DropZone({ selectedOption, isCorrect, isSubmitted, onReset, language, isValidating }: DropZoneProps) {
-  const { isOver, setNodeRef } = useDroppable({
-    id: 'answer-zone',
-    disabled: isSubmitted,
-  });
-  
-  const t = uiText[language];
-
-  return (
-    <div
-      ref={setNodeRef}
-      onClick={!isSubmitted && selectedOption ? onReset : undefined}
-      className={`w-full min-h-[120px] sm:min-h-[160px] rounded-[2rem] border-2 transition-all duration-300 flex items-center justify-center p-6 relative
-          ${selectedOption
-          ? isSubmitted
-            ? isCorrect
-              ? 'border-emerald-500 bg-emerald-500/10'
-              : 'border-amber-500 bg-amber-500/10'
-            : 'border-primary/50 bg-background cursor-pointer hover:bg-muted/5'
-          : isOver
-            ? 'border-primary border-dashed bg-primary-bg/10 scale-[1.02]'
-            : 'border-border border-dashed bg-muted/5'
-        }
-        `}
-    >
-      {selectedOption ? (
-        <div className={`text-center w-full animate-in fade-in zoom-in-95 duration-300`}>
-          <p dir="rtl" className={`font-arabic text-xl sm:text-2xl md:text-3xl leading-[2.2] 
-              ${isSubmitted
-              ? isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
-              : 'text-foreground'
-            }`}>
-            {selectedOption.text}
-          </p>
-          {!isSubmitted && (
-            <p className="text-xs text-muted-foreground mt-4 uppercase tracking-wider">
-              {t.tapToRemove}
-            </p>
-          )}
-        </div>
-      ) : (
-        <div className="text-center text-muted-foreground pointer-events-none space-y-2">
-          <p className="text-sm font-medium">{t.dragHere}</p>
-        </div>
-      )}
+      <button
+        onClick={() => setQuestionLimit(Math.min(20, questionLimit + 1))}
+        className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+        aria-label="Increase question limit"
+      >
+        +
+      </button>
     </div>
-  );
-}
+    <div className="flex justify-between text-[10px] text-muted-foreground px-1 uppercase tracking-wider font-medium">
+      <span>1</span>
+      <span>10</span>
+      <span>20</span>
+    </div>
+  </div>
+);
 
-
-function PracticeContent() {
-  const searchParams = useSearchParams();
-  const juzParam = searchParams.get('juz');
-  const surahParam = searchParams.get('surah');
-  const limitParam = searchParams.get('limit');
-  const sessionLimit = limitParam ? parseInt(limitParam) : 10;
-
-  const [question, setQuestion] = useState<Question | null>(null);
-  const [selectedOption, setSelectedOption] = useState<QuestionOption | null>(null);
-  const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
-  const [correctAyah, setCorrectAyah] = useState<QuestionOption | null>(null);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeDragItem, setActiveDragItem] = useState<QuestionOption | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [streak, setStreak] = useState<number>(0);
-
-  // New State for Points/Combo
-  const [combo, setCombo] = useState<number>(0);
-  const [maxCombo, setMaxCombo] = useState<number>(0);
-  const [maxStreak, setMaxStreak] = useState<number>(0);
-  const [pointsGained, setPointsGained] = useState<number>(0);
-  const [totalPoints, setTotalPoints] = useState<number>(0);
-  const [sessionFinished, setSessionFinished] = useState<boolean>(false);
-  const [remainingQuestions, setRemainingQuestions] = useState<number>(sessionLimit);
-  const [correctCount, setCorrectCount] = useState<number>(0);
+export default function Home() {
+  const router = useRouter();
   const [language, setLanguage] = useState<'id' | 'en'>('id');
-  const [isValidating, setIsValidating] = useState(false);
-  const [countdown, setCountdown] = useState(3);
-  const [isStarting, setIsStarting] = useState(true);
+  const [showJuzSelection, setShowJuzSelection] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const forceMove = true;
+  const [selectedJuzs, setSelectedJuzs] = useState<number[]>([]);
+  const [surahs, setSurahs] = useState<Surah[]>([]);
+  const [loadingSurahs, setLoadingSurahs] = useState(false);
+  const [selectedSurahs, setSelectedSurahs] = useState<number[]>([]);
+  const [questionLimit, setQuestionLimit] = useState<number>(10);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [autoplayAudio, setAutoplayAudio] = useState(true);
-
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isAutoplayLoaded, setIsAutoplayLoaded] = useState(false);
+  const [isJuzExpanded, setIsJuzExpanded] = useState(true);
+  const [showDomainNotice, setShowDomainNotice] = useState(false);
+  const [isDomainNoticeLoaded, setIsDomainNoticeLoaded] = useState(false);
 
   const t = uiText[language];
 
-  const { setNodeRef: setOptionsZoneRef } = useDroppable({
-    id: 'options-zone',
-    disabled: false,
-  });
-
-  // Persist question limit
-  useEffect(() => {
-    if (limitParam) {
-      localStorage.setItem('questionLimit', limitParam);
-    }
-  }, [limitParam]);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('autoplayAudio');
-    if (stored === null) {
-      localStorage.setItem('autoplayAudio', 'true');
-      setAutoplayAudio(true);
-      return;
-    }
-    setAutoplayAudio(stored === 'true');
-  }, []);
-
-  const playSound = (type: 'correct' | 'wrong' | 'completed') => {
-    const audio = new Audio(`/sfx/${type === 'correct' ? 'correct-answer' : type === 'wrong' ? 'wrong-answer' : 'completed'}.mp3`);
-    audio.volume = 0.5;
-    audio.play().catch(e => console.log('Audio play failed', e));
-  };
-
-  useEffect(() => {
-    if (isStarting && countdown > 0) {
-      const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (isStarting && countdown === 0) {
-      setIsStarting(false);
-    }
-  }, [countdown, isStarting]);
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 50,
-        tolerance: 10,
-      },
-    })
-  );
-
-  const fetchQuestion = async () => {
-    setIsPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    setIsLoading(true);
-    try {
-      let url = '/api/question';
-      const params = new URLSearchParams();
-      if (juzParam) params.append('juz', juzParam);
-      if (surahParam) params.append('surah', surahParam);
-
-      const lang = localStorage.getItem('app-language')?.toLowerCase() || 'id';
-      params.append('lang', lang);
-
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch question');
-      const data: Question = await res.json();
-      setQuestion(data);
-
-      // Reset state
-      setSelectedOption(null);
-      setFeedback(null);
-      setCorrectAyah(null);
-      setIsSubmitted(false);
-      setActiveDragItem(null);
-    } catch (error) {
-      console.error('Error fetching question:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (forceMove) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-hidden overflow-y-auto relative">
+        <IslamicPattern />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center relative z-10 w-full min-h-full">
+          <div className="w-full max-w-lg mx-auto space-y-6">
+            <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6 sm:p-8">
+              <div className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-1">
+                {t.siteMovedTitle}
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                {t.title} <span className="text-primary font-serif italic">Ayat</span>
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-3">
+                {t.siteMovedDesc}
+              </p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+                {t.siteMovedReason}
+              </p>
+              <a
+                href="https://saayat.site"
+                className="mt-6 inline-flex items-center justify-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition w-full"
+              >
+                {t.siteMovedCta}
+              </a>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              © {new Date().getFullYear()} Sambung Ayat
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const updateLang = () => {
-      const storedLang = localStorage.getItem('app-language');
+      const storedLang = localStorage.getItem('app-language') as 'id' | 'en';
       if (storedLang) setLanguage(storedLang.toLowerCase() as 'id' | 'en');
     };
 
@@ -333,393 +238,449 @@ function PracticeContent() {
     return () => window.removeEventListener('language-change', updateLang);
   }, []);
 
+  // Persist question limit
   useEffect(() => {
-    fetchQuestion();
-  }, [juzParam, surahParam]);
-
-  // Auto-play audio when question loads
-  useEffect(() => {
-    if (!isStarting && question && audioRef.current) {
-      audioRef.current.load();
-      if (!autoplayAudio) {
-        setIsPlaying(false);
-        return;
-      }
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => setIsPlaying(true))
-          .catch(error => {
-            console.log("Autoplay prevented:", error);
-            setIsPlaying(false);
-          });
-      }
+    const storedLimit = localStorage.getItem('questionLimit');
+    if (storedLimit) {
+      setQuestionLimit(parseInt(storedLimit));
     }
-  }, [question, isStarting, autoplayAudio]);
+    setIsLoaded(true);
+  }, []);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const option = active.data.current?.option;
-    setActiveDragItem(option);
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('questionLimit', questionLimit.toString());
+    }
+  }, [questionLimit, isLoaded]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('autoplayAudio');
+    if (stored === null) {
+      localStorage.setItem('autoplayAudio', 'true');
+      setAutoplayAudio(true);
+    } else {
+      setAutoplayAudio(stored === 'true');
+    }
+    setIsAutoplayLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isAutoplayLoaded) {
+      localStorage.setItem('autoplayAudio', autoplayAudio ? 'true' : 'false');
+    }
+  }, [autoplayAudio, isAutoplayLoaded]);
+
+  // Domain move notice persistence
+  useEffect(() => {
+    const dismissed = localStorage.getItem('domainNoticeDismissed');
+    setShowDomainNotice(dismissed !== 'true');
+    setIsDomainNoticeLoaded(true);
+  }, []);
+
+  const dismissDomainNotice = () => {
+    localStorage.setItem('domainNoticeDismissed', 'true');
+    setShowDomainNotice(false);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveDragItem(null);
-
-    const option = active.data.current?.option as QuestionOption | undefined;
-    if (!option) return;
-    if (over && over.id === 'answer-zone') {
-      setSelectedOption(option);
-    } else if (over && over.id === 'options-zone') {
-      if (!isSubmitted) setSelectedOption(null);
+  useEffect(() => {
+    if (selectedJuzs.length > 0) {
+      fetchSurahs(selectedJuzs);
+    } else {
+      setSurahs([]);
+      setSelectedSurahs([]);
     }
-  };
+  }, [selectedJuzs]);
 
-  const validateAnswer = async (optionToCheck?: QuestionOption) => {
-    const option = optionToCheck || selectedOption;
-    if (!option || !question) return;
+  useEffect(() => {
+    if (surahs.length === 0) return;
+    setSelectedSurahs(prev => prev.filter(id => surahs.some(s => s.id === id)));
+  }, [surahs]);
 
-    setIsValidating(true);
+  const fetchSurahs = async (juzs: number[]) => {
+    setLoadingSurahs(true);
     try {
-      const res = await fetch('/api/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          selectedAyahId: option.id,
-          currentAyahId: question.currentAyah.id,
-          sessionLimit: sessionLimit,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Validation failed');
-
-      const data: ValidationResponse = await res.json();
-
-      setFeedback(data.isCorrect ? 'correct' : 'incorrect');
-      if (data.isCorrect) {
-        setCorrectCount(prev => prev + 1);
-        setStreak(data.currentCorrectStreak ?? 0);
-        setCombo(data.comboStreak ?? 0);
-        setPointsGained(data.pointsGained ?? 0);
-        setMaxStreak(prev => Math.max(prev, data.currentCorrectStreak ?? 0));
-        setMaxCombo(prev => Math.max(prev, data.comboStreak ?? 0));
-        playSound('correct');
-      } else {
-        setStreak(0);
-        setCombo(0);
-        setPointsGained(0);
-        playSound('wrong');
+      const res = await fetch(`/api/surahs?juz=${juzs.join(',')}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSurahs(data);
       }
-
-      if (data.totalPoints !== undefined) setTotalPoints(data.totalPoints);
-      if (data.remainingQuestions !== undefined) setRemainingQuestions(data.remainingQuestions);
-      // Do not finish session immediately; show feedback first
-
-      if (data.correctAyah) {
-        // Map correctAyah to QuestionOption format if needed
-        setCorrectAyah({
-          id: data.correctAyah.id,
-          text: data.correctAyah.text,
-          surah: data.correctAyah.surah,
-          ayah: data.correctAyah.ayah
-        });
-      }
-      setIsSubmitted(true);
     } catch (error) {
-      console.error('Validation error:', error);
+      console.error('Failed to fetch surahs', error);
     } finally {
-      setIsValidating(false);
+      setLoadingSurahs(false);
     }
   };
 
-  const handleResetSelection = () => {
-    if (!isSubmitted) {
-      setSelectedOption(null);
+  const handleStartPractice = () => {
+    const params = new URLSearchParams();
+    if (selectedJuzs.length > 0) {
+      params.set('juz', selectedJuzs.join(','));
     }
-  };
-
-  const toggleAudio = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
+    if (selectedSurahs.length > 0) {
+      params.set('surah', selectedSurahs.join(','));
     }
+    params.set('limit', questionLimit.toString());
+    router.push(`/practice?${params.toString()}`);
   };
-
-  const dropAnimation: DropAnimation = {
-    sideEffects: defaultDropAnimationSideEffects({
-      styles: {
-        active: {
-          opacity: '0.5',
-        },
-      },
-    }),
-  };
-
-  if (isLoading && !question) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground animate-pulse">
-        <div className="text-lg tracking-widest uppercase">{t.loading}</div>
-      </div>
-    );
-  }
-
-  if (sessionFinished) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-start bg-background text-foreground p-6 pt-32 overflow-y-auto">
-        <div className="text-center space-y-8 animate-in zoom-in duration-500 max-w-md w-full my-auto">
-          <div className="space-y-2">
-            <div className="text-6xl mb-4 animate-bounce">🎉</div>
-            <h1 className="text-4xl font-bold text-primary">{t.sessionFinished}</h1>
-            <p className="text-muted-foreground">{t.completed} {sessionLimit} {t.questions}.</p>
-          </div>
-
-          <div className="p-8 bg-card border border-border rounded-3xl shadow-xl space-y-6">
-            <div className="flex flex-col items-center space-y-2">
-              <span className="text-sm text-muted-foreground uppercase tracking-wider">{t.totalPoints}</span>
-              <span className="text-5xl font-bold text-emerald-500 font-mono">{totalPoints}</span>
-            </div>
-
-            <div className="w-full h-px bg-border/50" />
-
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="p-4 rounded-2xl bg-muted/30">
-                <div className="text-2xl font-bold text-foreground">{maxStreak}</div>
-                <div className="text-xs text-muted-foreground mt-1">{t.lastStreak}</div>
-              </div>
-              <div className="p-4 rounded-2xl bg-muted/30">
-                <div className="text-2xl font-bold text-foreground">{maxCombo}</div>
-                <div className="text-xs text-muted-foreground mt-1">{t.maxCombo}</div>
-              </div>
-            </div>
-            <div className="p-4 rounded-2xl bg-muted/30 text-center">
-              <div className="text-2xl font-bold text-foreground">{correctCount}</div>
-              <div className="text-xs text-muted-foreground mt-1">{t.correctAnswers}</div>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => {
-                setSessionFinished(false);
-                setCombo(0);
-                setMaxCombo(0);
-                setStreak(0);
-                setMaxStreak(0);
-                setPointsGained(0);
-                setTotalPoints(0);
-                setCorrectCount(0);
-                setRemainingQuestions(sessionLimit);
-                setCountdown(3);
-                setIsStarting(true);
-                fetchQuestion();
-              }}
-              className="w-full py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-            >
-              {t.newSession}
-            </button>
-            <Link
-              href="/leaderboard"
-              className="w-full py-4 bg-transparent border border-border text-foreground rounded-full text-lg font-medium hover:bg-muted/50 transition-all duration-300"
-            >
-              {t.leaderboard}
-            </Link>
-            <Link
-              href="/"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
-            >
-              {t.home}
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-background text-foreground pt-20 pb-4 px-4 sm:p-6 transition-colors duration-500 overflow-x-hidden overflow-y-auto">
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        {isStarting && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="flex flex-col items-center justify-center gap-8">
-              <div className="text-8xl sm:text-[10rem] font-bold text-primary animate-bounce font-mono leading-none">
-                {countdown}
-              </div>
-              <p className="text-muted-foreground animate-pulse text-xl sm:text-2xl tracking-[0.5em] uppercase font-light text-center px-4">Bersiap...</p>
-            </div>
-          </div>
-        )}
+    <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors duration-500 overflow-x-hidden overflow-y-auto relative">
+      <IslamicPattern />
 
-        <main className="w-full max-w-xl flex flex-col items-center space-y-6 sm:space-y-12 pb-20 px-4 my-auto">
+      <main className="flex-1 flex flex-col items-center justify-center p-4 pt-24 pb-12 sm:p-20 text-center relative z-10 w-full min-h-full">
+        <div className="max-w-4xl w-full space-y-8 sm:space-y-12 animate-fade-in flex flex-col items-center my-auto">
 
-          {/* Header / Verse Display */}
-          <div className={`text-center space-y-4 sm:space-y-6 w-full transition-opacity duration-500 ${!question ? 'opacity-0' : 'opacity-100'}`}>
-            <div className="flex justify-between items-center w-full max-w-xs mx-auto text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-widest bg-muted/30 px-4 py-2 rounded-full">
-              <span>{t.question} {Math.max(1, (sessionLimit + 1) - remainingQuestions)} / {sessionLimit}</span>
-              <span className="text-primary">{totalPoints} {t.pts}</span>
-            </div>
-
-            <div className="relative py-2 space-y-4">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-arabic leading-[1.8] sm:leading-[2.0] md:leading-[2.2] text-foreground text-center px-2" dir="rtl">
-                {question?.currentAyah.text}
-              </h1>
-
-              {question?.currentAyah.translation && (
-                <p className="text-sm md:text-base text-muted-foreground/80 italic px-4">
-                  {`"${question.currentAyah.translation}"`}
-                </p>
-              )}
-
-              {question?.currentAyah.audio && (
-                <div className="flex justify-center mt-2">
-                  <button
-                    onClick={toggleAudio}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors text-sm font-medium whitespace-nowrap leading-none ${isPlaying
-                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                        : 'bg-primary hover:bg-primary/10 text-white'
-                      }`}
+          {/* Domain Move Notice */}
+          {isDomainNoticeLoaded && showDomainNotice && (
+            <div className="w-full max-w-2xl">
+              <div className="flex items-start justify-between gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-left">
+                <div className="space-y-1">
+                  <div className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                    {t.siteMovedTitle}
+                  </div>
+                  <p className="text-sm text-foreground/80">
+                    {t.siteMovedDesc}
+                  </p>
+                  <a
+                    href="https://saayat.site"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline underline-offset-4"
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    <span>{isPlaying ? t.stop : t.play}</span>
-                    <span className="text-lg">{isPlaying ? '⏹️' : '▶️'}</span>
-                  </button>
-                  <audio
-                    ref={audioRef}
-                    src={question.currentAyah.audio}
-                    onEnded={() => setIsPlaying(false)}
-                    onPause={() => setIsPlaying(false)}
-                    onPlay={() => setIsPlaying(true)}
-                    className="hidden"
-                  />
+                    {t.siteMovedCta} →
+                  </a>
                 </div>
-              )}
+                <button
+                  onClick={dismissDomainNotice}
+                  aria-label={t.close}
+                  className="p-2 rounded-full hover:bg-amber-500/20 text-amber-700/80 hover:text-amber-700 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Hero Section */}
+          <div className="space-y-6 sm:space-y-8 max-w-3xl relative w-full px-4 sm:px-0">
+            {/* Decorative Element Top */}
+            <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-48 sm:h-64 bg-primary/5 rounded-full blur-3xl -z-10" />
+
+            <Bismillah />
+
+            <div className="space-y-2">
+              <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-muted text-muted-foreground text-xs sm:text-sm font-medium tracking-wide mb-4">
+                ✨ {t.ver}
+              </div>
+              <h1 className="text-4xl sm:text-7xl font-bold tracking-tight text-foreground font-arabic leading-tight">
+                {t.title} <span className="text-primary font-serif italic relative inline-block">
+                  Ayat
+                  <span className="absolute -bottom-2 left-0 w-full h-1 bg-primary/20 rounded-full"></span>
+                </span>
+              </h1>
+              <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-primary/60 font-semibold mt-4">
+                {t.subtitle}
+              </p>
             </div>
 
-            <p className="text-sm text-muted-foreground/60 font-medium">
-              {t.surah} {question?.currentAyah.surahName || question?.currentAyah.surah} • {t.ayah} {question?.currentAyah.ayah}
+            <p className="text-base sm:text-xl text-muted-foreground max-w-xl mx-auto leading-relaxed font-serif px-2">
+              {t.verse}
+              <br />
+              <span className="text-xs sm:text-sm italic mt-2 block opacity-70">(QS. Al-Qamar: 17)</span>
             </p>
           </div>
 
-          {/* Drop Zone */}
-          <div className="w-full">
-            <DropZone
-              selectedOption={selectedOption}
-              isCorrect={feedback === 'correct'}
-              isSubmitted={isSubmitted}
-              onReset={handleResetSelection}
-              language={language}
-              isValidating={isValidating}
-            />
-          </div>
+          {/* CTA Section */}
+          <div className="w-full flex flex-col items-center justify-center pt-4 px-4 sm:px-0">
+            {!showJuzSelection && !showSettings ? (
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-in fade-in zoom-in duration-500 w-full max-w-md mx-auto">
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="group relative w-full sm:flex-1 inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-primary text-primary-foreground rounded-full text-base sm:text-lg font-medium tracking-wide shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden whitespace-nowrap leading-none"
+                >
+                  <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+                  <span className="relative">{t.startPractice}</span>
+                  <span className="relative opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all duration-300">→</span>
+                </button>
 
-          {/* Confirm Button - Moved below Drop Zone */}
-          {!isSubmitted && selectedOption && (
-            <button
-              onClick={() => validateAnswer()}
-              disabled={isValidating}
-              className={`w-full py-4 rounded-full text-lg font-medium tracking-wide transition-all duration-300 ${
-                isValidating
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'bg-foreground text-background hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0'
-              }`}
-            >
-              {t.confirm}
-            </button>
-          )}
+                <button
+                  onClick={() => setShowJuzSelection(true)}
+                  className="w-full sm:flex-1 px-6 sm:px-8 py-3 sm:py-4 bg-background border border-border text-muted-foreground hover:text-primary hover:border-primary/30 rounded-full text-base sm:text-lg font-medium transition-all duration-300 hover:bg-primary/5"
+                >
+                  {t.selectJuz}
+                </button>
+              </div>
+            ) : showSettings ? (
+              // Settings Modal / Card
+              <div className="w-full max-w-lg mx-auto bg-card/80 backdrop-blur-md border border-border rounded-3xl p-6 sm:p-10 shadow-xl shadow-primary/5 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-serif text-foreground">{t.settings}</h3>
+                  <button
+                    onClick={() => setShowSettings(false)}
+                    className="text-muted-foreground hover:text-destructive transition-colors p-2 rounded-full hover:bg-destructive/10"
+                    aria-label={t.close}
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
 
-          {/* Options Grid */}
-          {!isSubmitted && question && (
-            <div ref={setOptionsZoneRef} className="w-full grid grid-cols-1 gap-3">
-              {question.options.map((option) => (
-                <DraggableOption
-                  key={option.id}
-                  option={option}
-                  isSelected={selectedOption?.id === option.id}
-                  isDisabled={!!selectedOption}
-                  language={language}
-                />
-              ))}
-            </div>
-          )}
+                <div className="space-y-8">
+                  <QuestionLimitSlider t={t} questionLimit={questionLimit} setQuestionLimit={setQuestionLimit} />
 
-          {/* Actions & Feedback */}
-          <div className="w-full min-h-[100px] flex flex-col items-center justify-center space-y-4">
-            {isSubmitted && (
-              <div className="w-full space-y-6 animate-in slide-in-from-bottom-4 fade-in duration-500">
-                {feedback === 'incorrect' && correctAyah && (
-                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
-                    <p className="text-amber-600 dark:text-amber-400 font-medium">{t.incorrect}</p>
-                    <p className="font-arabic text-xl text-foreground dir-rtl">{correctAyah.text}</p>
+                  <div className="flex items-center justify-between rounded-2xl border border-border bg-background/50 px-4 py-3">
+                    <span className="text-sm font-medium text-foreground">{t.autoplayAudio}</span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={autoplayAudio}
+                      onClick={() => setAutoplayAudio(v => !v)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full border transition-colors ${autoplayAudio ? 'bg-primary border-primary/40' : 'bg-muted border-border'
+                        }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-background shadow-sm transition-transform ${autoplayAudio ? 'translate-x-5' : 'translate-x-0.5'
+                          }`}
+                      />
+                    </button>
                   </div>
-                )}
 
-                {feedback === 'correct' && (
-                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center animate-in zoom-in-95 duration-500 space-y-4">
-                    <p className="text-emerald-600 dark:text-emerald-400 font-semibold tracking-wide text-lg">{t.correct}</p>
+                  <button
+                    onClick={handleStartPractice}
+                    className="w-full py-3 sm:py-4 bg-primary text-primary-foreground rounded-xl text-lg font-medium tracking-wide shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.99]"
+                  >
+                    {t.startPractice}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-500 space-y-8 bg-card/80 backdrop-blur-md border border-border rounded-3xl p-6 sm:p-10 shadow-xl shadow-primary/5">
+                <div className="flex justify-between items-start border-b border-border/50 pb-6">
+                  <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsJuzExpanded(!isJuzExpanded)}>
+                    <div>
+                      <h3 className="text-2xl font-serif text-foreground text-start">{t.chooseJuz}</h3>
+                      <p className="text-muted-foreground text-sm mt-1 text-start">{t.chooseJuzDesc}</p>
+                    </div>
+                    {isJuzExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
 
-                    <div className="flex justify-center items-center gap-6">
-                      <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 delay-100">
-                        <span className="text-3xl font-bold text-emerald-500 font-mono">+{pointsGained}</span>
-                        <span className="text-[10px] uppercase tracking-wider text-emerald-600/70 font-bold mt-1">{t.pointsLabel}</span>
-                      </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowJuzSelection(false);
+                      setSelectedJuzs([]);
+                      setSelectedSurahs([]);
+                    }}
+                    className="text-sm text-primary hover:text-primary/80 underline underline-offset-4 font-medium"
+                  >
+                    {t.close}
+                  </button>
+                </div>
 
-                      {combo > 1 && (
-                        <div className={`flex flex-col items-center animate-in fade-in zoom-in delay-200 ${combo >= 3 ? 'scale-110' : ''}`}>
-                          <span className="text-3xl">🔥 x{combo}</span>
-                          <span className="text-[10px] uppercase tracking-wider text-orange-500/70 font-bold mt-1">{t.comboLabel}</span>
-                        </div>
-                      )}
+                {isJuzExpanded ? (
+                  <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-4 py-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {Array.from({ length: 30 }, (_, i) => i + 1).map((juz) => {
+                      const isSelected = selectedJuzs.includes(juz);
+                      return (
+                        <button
+                          key={juz}
+                          onClick={() => {
+                            setSelectedJuzs(prev => {
+                              if (prev.includes(juz)) return prev.filter(x => x !== juz);
+                              return [...prev, juz].sort((a, b) => a - b);
+                            });
+                          }}
+                          className={`aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl bg-background border transition-all duration-300 group shadow-sm hover:shadow-md relative overflow-hidden ${isSelected ? 'border-primary bg-primary/10' : 'border-border hover:border-primary hover:bg-primary/5 hover:scale-110 active:scale-95'
+                            }`}
+                        >
+                          <div className={`absolute inset-0 border-2 rounded-2xl transition-all duration-300 ${isSelected ? 'border-primary/20' : 'border-primary/0 group-hover:border-primary/10'
+                            }`}></div>
+                          <span className={`text-[10px] uppercase tracking-widest font-medium hidden sm:block ${isSelected ? 'text-primary/70' : 'text-muted-foreground group-hover:text-primary/70'
+                            }`}>{t.juz}</span>
+                          <span className={`text-2xl font-bold font-serif ${isSelected ? 'text-primary' : 'text-foreground group-hover:text-primary'
+                            }`}>{juz}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : selectedJuzs.length > 0 && (
+                  <div className="py-4 px-2">
+                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-between">
+                      <span className="font-medium text-foreground">
+                        {t.juz} {selectedJuzs.join(', ')}
+                      </span>
+                      <button
+                        onClick={() => setIsJuzExpanded(true)}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        Edit
+                      </button>
                     </div>
                   </div>
                 )}
 
-                <button
-                  onClick={() => {
-                    if (remainingQuestions <= 0) {
-                      setSessionFinished(true);
-                      playSound('completed');
-                      confetti({
-                        zIndex: 9999,
-                        particleCount: 100,
-                        spread: 70,
-                        origin: { y: 0.6 }
-                      });
-                    } else {
-                      fetchQuestion();
-                    }
-                  }}
-                  className="w-full py-4 bg-foreground text-background rounded-full text-lg font-medium tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300"
-                >
-                  {remainingQuestions <= 0 ? t.finish : t.next}
-                </button>
+                {selectedJuzs.length > 0 && (
+                  <div className="space-y-8 text-left w-full max-w-3xl mx-auto pt-2">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-serif text-muted-foreground">{t.configJuz} <br></br> {selectedJuzs.join(', ')}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedJuzs([]);
+                          setSelectedSurahs([]);
+                        }}
+                        className="text-sm text-primary hover:text-primary/80 underline underline-offset-4 font-medium"
+                      >
+                        {t.resetJuz}
+                      </button>
+                    </div>
+
+
+
+                    {loadingSurahs ? (
+                      <div className="py-10 text-center text-muted-foreground animate-pulse flex flex-col items-center gap-3">
+                        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        {t.loadingSurahs}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <label className="text-sm font-medium text-foreground block pl-1">{t.selectSurah}</label>
+                            <span className="text-xs text-muted-foreground block pl-1">{t.selectSurahDesc}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (selectedSurahs.length === surahs.length) {
+                                setSelectedSurahs([]);
+                              } else {
+                                setSelectedSurahs(surahs.map(s => s.id));
+                              }
+                            }}
+                            className={`text-xs underline underline-offset-4 transition-colors ${selectedSurahs.length === surahs.length
+                                ? 'text-primary font-bold'
+                                : 'text-muted-foreground hover:text-primary'
+                              }`}
+                          >
+                            {t.allSurahs}
+                          </button>
+                        </div>
+
+                        <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {surahs.map(surah => {
+                            const isSelected = selectedSurahs.includes(surah.id);
+                            return (
+                              <button
+                                key={surah.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedSurahs(prev => {
+                                    if (prev.includes(surah.id)) return prev.filter(x => x !== surah.id);
+                                    return [...prev, surah.id].sort((a, b) => a - b);
+                                  });
+                                }}
+                                className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${isSelected ? 'border-primary bg-primary/10' : 'border-border bg-background hover:bg-muted/40'
+                                  }`}
+                              >
+                                <div className={`h-5 w-5 rounded-md border flex items-center justify-center text-xs font-bold ${isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background'
+                                  }`}>
+                                  {isSelected ? '✓' : ''}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="text-sm font-medium text-foreground truncate">
+                                    {surah.id}. {surah.englishName}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground truncate">
+                                    {surah.name}
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+
+                    <QuestionLimitSlider t={t} questionLimit={questionLimit} setQuestionLimit={setQuestionLimit} />
+                    <div className="flex items-center justify-between rounded-2xl border border-border bg-background/50 px-4 py-3">
+                      <span className="text-sm font-medium text-foreground">{t.autoplayAudio}</span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={autoplayAudio}
+                        onClick={() => setAutoplayAudio(v => !v)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full border transition-colors ${autoplayAudio ? 'bg-primary border-primary/40' : 'bg-muted border-border'
+                          }`}
+                      >
+                        <span
+                          className={`inline-block h-5 w-5 transform rounded-full bg-background shadow-sm transition-transform ${autoplayAudio ? 'translate-x-5' : 'translate-x-0.5'
+                            }`}
+                        />
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={handleStartPractice}
+                      className="w-full py-4 bg-primary text-primary-foreground rounded-xl text-lg font-medium tracking-wide shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 transition-all active:scale-[0.99]"
+                    >
+                      {t.startPractice}
+                    </button>
+                  </div>
+                )}
+
               </div>
             )}
           </div>
 
-        </main>
-
-        {/* Drag Overlay for smooth movement */}
-        <DragOverlay dropAnimation={dropAnimation}>
-          {activeDragItem ? (
-            <div className="w-full p-4 rounded-xl border border-primary/50 bg-background shadow-2xl cursor-grabbing rotate-2 scale-105">
-              <p className="font-arabic text-xl md:text-2xl text-center leading-loose dir-rtl">
-                {activeDragItem.text}
-              </p>
+          {/* Features Grid (Subtle) */}
+          {!showJuzSelection && !showSettings && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-12 max-w-4xl mx-auto text-sm text-muted-foreground animate-in fade-in delay-200">
+              <div className="group space-y-3 p-4 rounded-2xl hover:bg-card/50 transition-colors duration-300">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto text-primary mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-2xl">📖</span>
+                </div>
+                <h3 className="font-serif text-lg text-foreground">{t.feature1Title}</h3>
+                <p>{t.feature1Desc}</p>
+              </div>
+              <div className="group space-y-3 p-4 rounded-2xl hover:bg-card/50 transition-colors duration-300">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto text-primary mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-2xl">🧠</span>
+                </div>
+                <h3 className="font-serif text-lg text-foreground">{t.feature2Title}</h3>
+                <p>{t.feature2Desc}</p>
+              </div>
+              <div className="group space-y-3 p-4 rounded-2xl hover:bg-card/50 transition-colors duration-300">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto text-primary mb-3 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-2xl">🌿</span>
+                </div>
+                <h3 className="font-serif text-lg text-foreground">{t.feature3Title}</h3>
+                <p>{t.feature3Desc}</p>
+              </div>
             </div>
-          ) : null}
-        </DragOverlay>
+          )}
 
-      </DndContext>
+        </div>
+      </main>
+
+      <footer className="py-8 text-center text-sm text-muted-foreground/60 relative z-10">
+        <div className="mt-16 px-4">
+          <div className="max-w-2xl mx-auto p-6 rounded-3xl border border-border bg-muted/30 text-center">
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Jika aplikasi ini bermanfaat dan ingin ikut menjaga server tetap hidup, kamu bisa support di sini 🤍
+            </p>
+            <a
+              href="https://saweria.co/dayeeen"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center mt-5 px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition"
+            >
+              Dukung via Saweria
+            </a>
+            <p className="text-sm text-muted-foreground mt-5">© {new Date().getFullYear()} Sambung Ayat. {t.footer}</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
