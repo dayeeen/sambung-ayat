@@ -1,5 +1,6 @@
 import { fetchAyahByGlobalNumber, fetchNextAyah, fetchRandomAyah, fetchJuz, fetchAyahDetails } from './alquran';
 import { GeneratedQuestion, QuestionOption, Ayah } from '../types/quran';
+import { generateChallenge } from './security';
 
 const TOTAL_AYAHS = 6236;
 
@@ -116,7 +117,7 @@ export async function generateQuestion(juz?: number | number[], surah?: string, 
   const { audio, translation } = await fetchAyahDetails(currentAyah.number, lang);
 
   // 3. Generate 3 distractors
-  const options: QuestionOption[] = [];
+  const options: any[] = [];
   
   // Start with the correct answer
   options.push({
@@ -168,15 +169,29 @@ export async function generateQuestion(juz?: number | number[], surah?: string, 
     }
   }
 
-  // 4. Shuffle options (Fisher-Yates)
+  // 4. Shuffle options (Fisher-Yates) and Assign Keys
   for (let i = options.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [options[i], options[j]] = [options[j], options[i]];
   }
 
+  // Create obfuscated keys and choice map
+  const choiceMap: Record<string, number> = {};
+  const obfuscatedOptions: QuestionOption[] = options.map((opt, index) => {
+    const key = `opt_${index + 1}`;
+    choiceMap[key] = opt.id;
+    return {
+      key,
+      text: opt.text,
+      surah: opt.surah,
+      ayah: opt.ayah
+    };
+  });
+
+  const challengeToken = generateChallenge(correctNext.number, currentAyah.number, choiceMap);
+
   return {
     currentAyah: {
-      id: currentAyah.number,
       text: currentAyah.text,
       surah: currentAyah.surah.number,
       surahName: currentAyah.surah.englishName,
@@ -186,6 +201,7 @@ export async function generateQuestion(juz?: number | number[], surah?: string, 
       translation
     },
     correctAyahId: correctNext.number,
-    options
+    options: obfuscatedOptions,
+    challengeToken
   };
 }

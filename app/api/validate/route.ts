@@ -3,22 +3,33 @@ import { fetchNextAyah } from '../../../lib/alquran';
 import { ValidationRequest } from '../../../types/quran';
 import { getCurrentUser } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
+import { verifyChallenge } from '../../../lib/security';
 
 export async function POST(request: NextRequest) {
   try {
     const body: ValidationRequest = await request.json();
-    const { selectedAyahId, currentAyahId, sessionLimit } = body;
+    const { choiceKey, challengeToken, sessionLimit } = body;
 
-    if (!selectedAyahId || !currentAyahId) {
+    if (!choiceKey || !challengeToken) {
        return NextResponse.json(
-        { error: 'Missing selectedAyahId or currentAyahId' },
+        { error: 'Missing choiceKey or challengeToken' },
         { status: 400 }
       );
     }
 
-    const nextAyah = await fetchNextAyah(currentAyahId);
-    const isCorrect = nextAyah.number === selectedAyahId;
-    const correctAyah = nextAyah;
+    const payload = verifyChallenge(challengeToken);
+    if (!payload) {
+      return NextResponse.json(
+        { error: 'Invalid or expired challenge token' },
+        { status: 403 }
+      );
+    }
+
+    const selectedAyahId = payload.choiceMap[choiceKey];
+    const isCorrect = selectedAyahId === payload.correctId;
+    
+    // Use the verified currentAyahId from payload for consistency
+    const correctAyah = await fetchNextAyah(payload.currentAyahId);
 
     // Save Progress (Guest or Logged In)
     let currentStreak = 0;
@@ -127,16 +138,6 @@ export async function POST(request: NextRequest) {
           sessionFinished: isSessionFinished
         };
 
-        // Create Answer Record
-        await prisma.answer.create({
-          data: {
-            userId: user.id,
-            sessionId: session.id,
-            ayahId: currentAyahId,
-            isCorrect: isCorrect,
-          }
-        });
-
         // Update User Stats
         const updatedUser = await prisma.user.update({
           where: { id: user.id },
@@ -151,6 +152,19 @@ export async function POST(request: NextRequest) {
             
             totalPoints: { increment: gainedPoint },
             lastActiveAt: isCorrect ? new Date() : undefined,
+          }
+        });
+
+        // Use the verified currentAyahId from payload
+        const ayahIdFromToken = payload.currentAyahId;
+
+        // Create Answer Record
+        await prisma.answer.create({
+          data: {
+            userId: user.id,
+            sessionId: session.id,
+            ayahId: ayahIdFromToken,
+            isCorrect: isCorrect,
           }
         });
         

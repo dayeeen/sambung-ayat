@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
     // Transform to public Question type (hide correctAyahId)
     const publicQuestion: Question = {
       currentAyah: generated.currentAyah,
-      options: generated.options
+      options: generated.options,
+      challengeToken: generated.challengeToken
     };
 
     return NextResponse.json(publicQuestion);

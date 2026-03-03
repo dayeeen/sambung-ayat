@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 
 const GUEST_COOKIE = 'guest_id'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,

@@ -27,7 +27,7 @@ export interface Ayah {
 }
 
 export interface QuestionOption {
-  id: number; // Using global ayah number as ID
+  key: string; // Obfuscated key (e.g., 'opt_1')
   text: string;
   surah: number;
   ayah: number;
@@ -35,7 +35,7 @@ export interface QuestionOption {
 
 export interface Question {
   currentAyah: {
-    id: number;
+    // Hidden global ID from public type
     text: string;
     surah: number;
     surahName?: string;
@@ -45,6 +45,7 @@ export interface Question {
     translation?: string;
   };
   options: QuestionOption[];
+  challengeToken: string;
 }
 
 // Internal type for generator before sanitizing for frontend
@@ -53,8 +54,8 @@ export interface GeneratedQuestion extends Question {
 }
 
 export interface ValidationRequest {
-  selectedAyahId: number;
-  currentAyahId: number;
+  choiceKey: string;
+  challengeToken: string;
   sessionLimit?: number;
 }
 
