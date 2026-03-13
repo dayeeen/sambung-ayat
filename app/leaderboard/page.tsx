@@ -3,29 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '../../lib/supabase/client';
-
-interface LeaderboardUser {
-  id: string;
-  displayName: string | null;
-  longestStreak: number;
-  longestCorrectStreak: number;
-  totalCorrect: number;
-  totalPoints: number;
-}
-
-interface CurrentUserRank extends LeaderboardUser {
-  rank: number;
-}
+import { useLeaderboard } from '@/hooks/useLeaderboard';
 
 export default function LeaderboardPage() {
-  const [users, setUsers] = useState<LeaderboardUser[]>([]);
-  const [currentUser, setCurrentUser] = useState<CurrentUserRank | null>(null);
-  const [sortBy, setSortBy] = useState<'daily' | 'correct' | 'points'>('points');
-  const [loadedSortBy, setLoadedSortBy] = useState<'daily' | 'correct' | 'points' | null>(null);
+  const { users, currentUser, isLoading, error, sortBy, setSortBy } = useLeaderboard();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
 
-  const loading = loadedSortBy !== sortBy;
+  const loading = isLoading;
 
   useEffect(() => {
     const supabase = createClient();
@@ -35,30 +20,11 @@ export default function LeaderboardPage() {
     });
   }, []);
 
-  useEffect(() => {
-    fetch(`/api/leaderboard?sortBy=${sortBy}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.topUsers) {
-          setUsers(data.topUsers);
-        } else if (Array.isArray(data)) {
-          // Fallback for backward compatibility
-          setUsers(data);
-        }
-        
-        if (data.currentUser) {
-            setCurrentUser(data.currentUser);
-        } else {
-            setCurrentUser(null);
-        }
+  // ...
 
-        setLoadedSortBy(sortBy);
-      })
-      .catch((err) => {
-        console.error('Failed to load leaderboard', err);
-        setLoadedSortBy(sortBy);
-      });
-  }, [sortBy]);
+  if (error) {
+    return <div className="p-12 text-center text-red-500">Gagal memuat data leaderboard.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground pt-24 pb-6 px-6 flex flex-col items-center">

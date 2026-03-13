@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Question, QuestionOption, ValidationResponse } from '../types/quran';
+import { Question, QuestionOption } from '../types/quran';
+import { validateApi } from '@/lib/api';
 
 export function useVerseValidation(sessionLimit: number, playSound: (type: 'correct' | 'wrong' | 'completed') => void) {
   const [isValidating, setIsValidating] = useState(false);
@@ -20,21 +21,11 @@ export function useVerseValidation(sessionLimit: number, playSound: (type: 'corr
 
     setIsValidating(true);
     try {
-      const res = await fetch('/api/validate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          choiceKey: option.key,
-          challengeToken: question.challengeToken,
-          sessionLimit: sessionLimit,
-        }),
+      const data = await validateApi.validateAnswer({
+        choiceKey: option.key,
+        challengeToken: question.challengeToken,
+        sessionLimit: sessionLimit,
       });
-
-      if (!res.ok) throw new Error('Validation failed');
-
-      const data: ValidationResponse = await res.json();
 
       setFeedback(data.isCorrect ? 'correct' : 'incorrect');
       if (data.isCorrect) {

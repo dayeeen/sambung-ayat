@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense, useRef } from 'react';
+import { useState, useEffect, Suspense, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -17,9 +17,10 @@ import {
   closestCenter,
   useDroppable
 } from '@dnd-kit/core';
-import { Question, QuestionOption } from '@/types/quran';
+import { QuestionOption } from '@/types/quran';
 import confetti from 'canvas-confetti';
 import { useVerseValidation } from '@/hooks/useVerseValidation';
+import { useQuestion } from '@/hooks/useQuestion';
 import { DraggableOption } from '@/components/practice/DraggableOption';
 import { DropZone } from '@/components/practice/DropZone';
 import uiTexts from '@/i18n/practice.json';
@@ -45,9 +46,8 @@ function PracticeContent() {
   const limitParam = searchParams.get('limit');
   const sessionLimit = limitParam ? parseInt(limitParam) : 10;
 
-  const [question, setQuestion] = useState<Question | null>(null);
+  const { question, isLoading, fetchQuestion } = useQuestion();
   const [selectedOption, setSelectedOption] = useState<QuestionOption | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [activeDragItem, setActiveDragItem] = useState<QuestionOption | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [language, setLanguage] = useState<'id' | 'en'>('id');
@@ -118,39 +118,24 @@ function PracticeContent() {
     useSensor(TouchSensor, { activationConstraint: { delay: 50, tolerance: 10 } })
   );
 
-  const fetchQuestion = async () => {
+  const loadNewQuestion = useCallback(async () => {
     setIsPlaying(false);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    setIsLoading(true);
     resetValidationState();
     setSelectedOption(null);
     setActiveDragItem(null);
 
-    try {
-      let url = '/api/question';
-      const params = new URLSearchParams();
-      if (juzParam) params.append('juz', juzParam);
-      if (surahParam) params.append('surah', surahParam);
-      const lang = localStorage.getItem('app-language')?.toLowerCase() || 'id';
-      params.append('lang', lang);
-
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch question');
-      const data: Question = await res.json();
-      setQuestion(data);
-    } catch (error) {
-      console.error('Error fetching question:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const lang = localStorage.getItem('app-language')?.toLowerCase() || 'id';
+    
+    await fetchQuestion({
+      juz: juzParam,
+      surah: surahParam,
+      lang: lang as 'id' | 'en'
+    });
+  }, [audioRef, juzParam, surahParam, fetchQuestion, resetValidationState]);
 
   useEffect(() => {
     const updateLang = () => {
@@ -163,8 +148,8 @@ function PracticeContent() {
   }, []);
 
   useEffect(() => {
-    fetchQuestion();
-  }, [juzParam, surahParam]);
+    loadNewQuestion();
+  }, [loadNewQuestion]);
 
   useEffect(() => {
     if (!isStarting && question && audioRef.current) {
@@ -265,7 +250,7 @@ function PracticeContent() {
                 resetSessionStats(sessionLimit);
                 setCountdown(3);
                 setIsStarting(true);
-                fetchQuestion();
+                loadNewQuestion();
               }}
               className="w-full py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-1 hover:bg-primary/90 transition-all duration-300 cursor-pointer"
             >
@@ -309,7 +294,7 @@ function PracticeContent() {
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-arabic leading-[1.8] sm:leading-[2.0] md:leading-[2.2] text-foreground text-center px-2" dir="rtl">
                 {question?.currentAyah.text}
               </h1>
-              {question?.currentAyah.translation && <p className="text-sm md:text-base text-muted-foreground/80 italic px-4">"{question.currentAyah.translation}"</p>}
+              {question?.currentAyah.translation && <p className="text-sm md:text-base text-muted-foreground/80 italic px-4">&quot;{question.currentAyah.translation}&quot;</p>}
               {question?.currentAyah.audio && (
                 <div className="flex justify-center mt-2">
                   <button
@@ -384,7 +369,7 @@ function PracticeContent() {
                       playSound('completed');
                       confetti({ zIndex: 9999, particleCount: 100, spread: 70, origin: { y: 0.6 } });
                     } else {
-                      fetchQuestion();
+                      loadNewQuestion();
                     }
                   }}
                   className="w-full py-4 bg-foreground text-background rounded-full text-lg font-medium tracking-wide shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 hover:bg-foreground/90 transition-all duration-300 cursor-pointer"
