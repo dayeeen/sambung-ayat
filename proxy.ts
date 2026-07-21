@@ -1,8 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-const GUEST_COOKIE = 'guest_id'
-
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -36,32 +34,7 @@ export async function proxy(request: NextRequest) {
 
   await supabase.auth.getUser()
 
-  // 2. Ensure Guest Cookie
-  let guestId = request.cookies.get(GUEST_COOKIE)?.value
-  
-  if (!guestId) {
-    guestId = crypto.randomUUID()
-    
-    // Create new headers to pass the cookie to downstream (Server Components/API)
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set('cookie', request.cookies.toString() + `; ${GUEST_COOKIE}=${guestId}`)
-    
-    // Update response with new request headers
-    response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    })
-
-    // Set cookie on the response for the client
-    response.cookies.set(GUEST_COOKIE, guestId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 365 * 10 // 10 years
-    })
-  }
+  // No auto-guest: do not assign guest cookie for all visitors
 
   return response
 }

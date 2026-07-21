@@ -36,27 +36,10 @@ export async function getCurrentUser() {
   const guestId = cookieStore.get(GUEST_COOKIE)?.value
 
   if (guestId) {
-    let guestUser = await prisma.user.findUnique({
+    const guestUser = await prisma.user.findUnique({
       where: { id: guestId }
     })
-    
-    // Create guest if missing (lazy creation)
-    if (!guestUser) {
-      try {
-        guestUser = await prisma.user.create({
-          data: {
-            id: guestId,
-            isGuest: true,
-            displayName: `Hamba-${Math.floor(Math.random() * 9000) + 1000}`
-          }
-        })
-      } catch (e) {
-        // Handle race condition where middleware sets cookie but DB create fails (e.g. duplicate)
-        // Retry fetch
-        guestUser = await prisma.user.findUnique({ where: { id: guestId } })
-      }
-    }
-    return guestUser
+    if (guestUser) return guestUser
   }
 
   // Should not happen if middleware is working

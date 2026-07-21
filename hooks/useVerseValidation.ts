@@ -39,21 +39,60 @@ export function useVerseValidation(sessionLimit: number, playSound: (type: 'corr
       setFeedback(data.isCorrect ? 'correct' : 'incorrect');
       if (data.isCorrect) {
         setCorrectCount(prev => prev + 1);
-        setStreak(data.currentCorrectStreak ?? 0);
-        setCombo(data.comboStreak ?? 0);
-        setPointsGained(data.pointsGained ?? 0);
-        setMaxStreak(prev => Math.max(prev, data.currentCorrectStreak ?? 0));
-        setMaxCombo(prev => Math.max(prev, data.comboStreak ?? 0));
+        setStreak(data.currentCorrectStreak ?? (streak + 1));
+        const nextCombo = (data.comboStreak !== undefined) ? data.comboStreak : (combo + 1);
+        const gained = (data.pointsGained !== undefined) ? data.pointsGained : (10 + (nextCombo >= 3 ? nextCombo * 5 : 0));
+        setCombo(nextCombo);
+        setPointsGained(gained);
+        setMaxStreak(prev => Math.max(prev, data.currentCorrectStreak ?? (streak + 1)));
+        setMaxCombo(prev => Math.max(prev, nextCombo));
         playSound('correct');
       } else {
         setStreak(0);
-        setCombo(0);
+        const nextCombo = 0;
+        setCombo(nextCombo);
         setPointsGained(0);
         playSound('wrong');
       }
 
-      if (data.totalPoints !== undefined) setTotalPoints(data.totalPoints);
-      if (data.remainingQuestions !== undefined) setRemainingQuestions(data.remainingQuestions);
+      if (data.totalPoints !== undefined) {
+        setTotalPoints(data.totalPoints);
+      } else {
+        const inc = data.isCorrect ? (10 + ((data.comboStreak ?? (combo + 1)) >= 3 ? (data.comboStreak ?? (combo + 1)) * 5 : 0)) : 0;
+        setTotalPoints(prev => {
+          const next = prev + inc;
+          try {
+            if (typeof window !== 'undefined') {
+              const snapshot = {
+                totalPoints: next,
+                remainingQuestions,
+                correctCount: data.isCorrect ? (correctCount + 1) : correctCount,
+                combo,
+                maxCombo,
+                streak,
+                maxStreak,
+              };
+              window.localStorage.setItem('guestSession', JSON.stringify(snapshot));
+            }
+          } catch {}
+          return next;
+        });
+      }
+      if (data.remainingQuestions !== undefined) {
+        setRemainingQuestions(data.remainingQuestions);
+      } else {
+        setRemainingQuestions(prev => {
+          const next = Math.max(0, prev - 1);
+          try {
+            if (typeof window !== 'undefined') {
+              const snapshot = JSON.parse(window.localStorage.getItem('guestSession') || '{}');
+              snapshot.remainingQuestions = next;
+              window.localStorage.setItem('guestSession', JSON.stringify(snapshot));
+            }
+          } catch {}
+          return next;
+        });
+      }
 
       if (data.correctAyah) {
         setCorrectAyah({

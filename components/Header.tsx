@@ -82,17 +82,39 @@ export default function Header() {
             </div>
           </div>
         ) : (
-          <button 
-            onClick={handleLogin}
-            className="px-4 py-1.5 sm:px-5 sm:py-2 bg-primary text-primary-foreground text-xs sm:text-sm font-medium rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
-          >
-            Login
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link 
+              href="/leaderboard"
+              className="p-2 rounded-full hover:bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+              title="Leaderboard"
+            >
+              <Trophy className="w-5 h-5" />
+            </Link>
+            <button 
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/guest/start', { method: 'POST' })
+                  if (res.ok) {
+                    setShowSettings(true)
+                  }
+                } catch {}
+              }}
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-muted text-foreground text-xs sm:text-sm font-medium rounded-full hover:bg-muted/70 transition-colors"
+            >
+              Tamu
+            </button>
+            <button 
+              onClick={handleLogin}
+              className="px-4 py-1.5 sm:px-5 sm:py-2 bg-primary text-primary-foreground text-xs sm:text-sm font-medium rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+            >
+              Login
+            </button>
+          </div>
         )}
       </div>
 
       {/* User Settings Modal */}
-      {showSettings && user && (
+      {showSettings && (
         <UserSettings 
           user={user} 
           onClose={() => setShowSettings(false)} 
